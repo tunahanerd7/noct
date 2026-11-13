@@ -26,6 +26,7 @@ small{color:#6f6f7e}</style></head>
   if (t === 'v' && v) deep = 'noct://v/' + enc(v);
   if (t === 'e' && v && id) deep = 'noct://e/' + enc(v) + '/' + enc(id);
   if (t === 'p' && id) deep = 'noct://p/' + enc(id);
+  if (t === 'u' && id) deep = 'noct://u/' + enc(id);
   var tr = (navigator.language || '').toLowerCase().indexOf('tr') === 0;
   if (tr) {
     document.documentElement.lang = 'tr';
