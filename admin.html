@@ -269,11 +269,12 @@ function card(parent, html, cls = "") { const d = el(`<div class="card ${cls}">$
 function empty(parent, text) { parent.insertAdjacentHTML("beforeend", `<div class="empty">${text}</div>`); }
 
 // ================= durum =================
-const S = { threads: [], page: "overview", biz: [], venueClaims: [], creatorClaims: [], gigs: [], reports: [], banned: [], featureReqs: [], creators: null, bannedSet: new Set() };
+const S = { changes: [], threads: [], page: "overview", biz: [], venueClaims: [], creatorClaims: [], gigs: [], reports: [], banned: [], featureReqs: [], creators: null, bannedSet: new Set() };
 const unmanaged = (b) => b.isPublic && !b.ownerId && !Object.keys(b.team || {}).length && !(b.teamIds || []).length;
 const PAGES = [
   { g: "Genel", k: "overview", ic: "◎", t: "Genel bakış", v: viewOverview },
   { g: "Onay bekleyenler", k: "claims", ic: "🏠", t: "Mekân başvuruları", n: () => S.venueClaims.length, v: viewClaims },
+  { g: "Onay bekleyenler", k: "changes", ic: "📍", t: "Adres değişiklikleri", n: () => S.changes.length, v: viewChanges },
   { g: "Onay bekleyenler", k: "creatorClaims", ic: "🎤", t: "Sanatçı başvuruları", n: () => S.creatorClaims.length, v: viewCreatorClaims },
   { g: "Onay bekleyenler", k: "gigs", ic: "📅", t: "Etkinlik önerileri", n: () => S.gigs.length, v: viewGigs },
   { g: "Onay bekleyenler", k: "featured", ic: "✦", t: "Öne çıkarma", n: () => S.featureReqs.length, v: viewFeatured },
@@ -362,6 +363,7 @@ async function loadCore() {
     pend("featureRequests"),
     getDocs(collection(db, "businesses"))
   ]);
+  try { S.changes = docs(await getDocs(query(collection(db, "venueChanges"), where("status", "==", "pending")))); } catch { S.changes = []; }
   try { S.threads = docs(await getDocs(query(collection(db, "support"), orderBy("lastAt", "desc"), limit(150)))); } catch { S.threads = []; }
   const byOld = (a, b) => (toDate(a.createdAt) || 0) - (toDate(b.createdAt) || 0);
   S.venueClaims = docs(vc).sort(byOld);
@@ -585,6 +587,50 @@ async function approveClaim(c) {
   await updateDoc(doc(db, "venueClaims", c.id), { status: "approved", venueId, reviewedAt: serverTimestamp() });
   S.venueClaims = S.venueClaims.filter((x) => x.id !== c.id); render();
   notify("claimResult", { col: "venueClaims", id: c.id });
+}
+
+// ================= ADRES DEĞİŞİKLİKLERİ =================
+const T_ADDR_OK = [["Onay", "{v} için adres değişikliğin onaylandı ✓ Yeni adres haritada ve mekân sayfanda görünüyor."]];
+const T_ADDR_NO = [
+  ["Belge yetersiz", "{v} için adres değişikliğini onaylayamadık: belgede yeni adres görünmüyor ya da okunmuyor. Yeni adresi gösteren bir belgeyle tekrar isteyebilirsin."],
+  ["Adres eşleşmiyor", "{v} için adres değişikliğini onaylayamadık: seçtiğin adres belgedeki adresle eşleşmiyor."]
+];
+function viewChanges(m) {
+  if (!S.changes.length) return empty(m, "Bekleyen adres değişikliği yok.");
+  for (const c of S.changes) {
+    const b = S.biz.find((x) => x.id === c.bizId) || {};
+    const d = card(m, `
+      <div class="title">${esc(c.venueName)} <span class="chip p">Adres değişikliği</span></div>
+      <div class="muted">${uname(c.userId)} · ${ago(c.createdAt)}</div>
+      <div class="kv">
+        <b>Eski adres</b><span>${esc(c.oldAddress || "—")} ${mapLink(b.coordinateLat, b.coordinateLon)}</span>
+        <b>Yeni adres</b><span><b style="color:var(--text)">${esc(c.newAddress)}</b> ${mapLink(c.lat, c.lon)}</span>
+        ${c.note ? `<b>Not</b><span>${esc(c.note)}</span>` : ""}
+        <b>Belgeler</b><span data-docs><span class="muted">yükleniyor…</span></span>
+      </div>
+      <div class="btns"><button class="b ok" data-a="ok">Onayla…</button><button class="b bad" data-a="no">Reddet…</button><button class="b" data-a="v">Mekânı aç</button></div>`);
+    getDocs(collection(db, "venueChanges", c.id, "docs")).then((s) => {
+      const list = docs(s);
+      $("[data-docs]", d).innerHTML = list.length ? `<div class="row" style="gap:8px">${list.map((x) => `<div style="text-align:center">${img(x.img)}<div class="muted" style="font-size:11px">${esc(DOC_TR[x.type] || x.type)}</div></div>`).join("")}</div>` : `<span class="chip bad">Belge yok</span>`;
+    }).catch(() => {});
+    const delDocs = async () => { const s = await getDocs(collection(db, "venueChanges", c.id, "docs")).catch(() => null); if (s) await Promise.all(s.docs.map((x) => deleteDoc(x.ref).catch(() => {}))); };
+    const done = () => { S.changes = S.changes.filter((x) => x.id !== c.id); render(); };
+    $('[data-a="v"]', d).onclick = () => openVenue(c.bizId);
+    $('[data-a="ok"]', d).onclick = () => composer(d, { title: "Onay mesajı", templates: T_ADDR_OK, venue: c.venueName, button: "Onayla ve gönder", cls: "ok",
+      onSend: async (t) => {
+        const data = { "details.address": c.newAddress, coordinateLat: Number(c.lat), coordinateLon: Number(c.lon) };
+        const a = await areaOf(c.lat, c.lon); if (a) Object.assign(data, a);
+        await updateDoc(doc(db, "businesses", c.bizId), data);
+        if (b.id) Object.assign(b, { coordinateLat: Number(c.lat), coordinateLon: Number(c.lon), details: { ...(b.details || {}), address: c.newAddress } });
+        await updateDoc(doc(db, "venueChanges", c.id), { status: "approved", reviewedAt: serverTimestamp() });
+        await delDocs(); await sendNoct(c.userId, t); done(); toast("Adres güncellendi");
+      } });
+    $('[data-a="no"]', d).onclick = () => composer(d, { title: "Red nedeni", templates: T_ADDR_NO, venue: c.venueName, button: "Reddet ve gönder", cls: "bad",
+      onSend: async (t) => {
+        await updateDoc(doc(db, "venueChanges", c.id), { status: "rejected", adminNote: t.slice(0, 200), reviewedAt: serverTimestamp() });
+        await delDocs(); await sendNoct(c.userId, t); done(); toast("Reddedildi");
+      } });
+  }
 }
 
 // ================= SANATÇI BAŞVURULARI =================
