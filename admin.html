@@ -71,6 +71,10 @@ h3{font-size:12px;margin:18px 0 8px;color:var(--muted);text-transform:uppercase;
 .kv{display:grid;grid-template-columns:max-content 1fr;gap:3px 14px;font-size:13.5px;margin-top:8px}
 .kv b{color:var(--muted);font-weight:500}
 .chip{display:inline-block;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:0 9px;font-size:12px;line-height:20px;margin:2px 4px 2px 0;font-weight:500;color:var(--text)}
+.seal{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;flex:none;background:conic-gradient(from 200deg,#7a5cff,#bf4dfc,#ff5ea3,#7a5cff);
+  box-shadow:0 0 0 3px #fff inset,0 0 0 5px rgba(122,92,255,.35) inset,0 4px 10px rgba(0,0,0,.18);transform:rotate(-8deg);margin-right:12px}
+.seal-disc{width:70%;height:70%;border-radius:50%;display:flex;align-items:center;justify-content:center;transform:rotate(8deg);font-size:10px;color:#999;overflow:hidden}
+.seal-disc img{width:72%;height:72%;object-fit:contain}
 .chip.p{background:var(--accSoft);border-color:#ddd0fb;color:var(--acc)}
 .chip.ok{background:var(--okSoft);border-color:#c6ecd3;color:var(--ok)}
 .chip.bad{background:var(--badSoft);border-color:#f8c9c9;color:var(--bad)}
@@ -286,6 +290,9 @@ const PAGES = [
   { g: "Veriler", k: "events", ic: "🎟", t: "Etkinlikler", v: viewEvents },
   { g: "Veriler", k: "moments", ic: "📸", t: "Paylaşımlar", v: viewMoments },
   { g: "Veriler", k: "places", ic: "🏟", t: "Kamuya açık alanlar", v: viewPlaces },
+  { g: "Markalar ve seriler", k: "brands", ic: "✺", t: "Markalar", v: viewBrands },
+  { g: "Markalar ve seriler", k: "links", ic: "⛓", t: "Marka bağlantıları", n: () => (S.links || []).filter((l) => l.status === "pending").length, v: viewLinks },
+  { g: "Markalar ve seriler", k: "series", ic: "〰", t: "Seriler", v: viewSeries },
   { g: "Sistem", k: "banned", ic: "⛔", t: "Askıdakiler", v: viewBanned },
   { g: "Sistem", k: "tools", ic: "⚙", t: "Araçlar", v: viewTools }
 ];
@@ -706,6 +713,7 @@ function viewGigs(m) {
       guard(e.target, async () => {
         const data = { status: "rejected", decidedAt: serverTimestamp() }; if (r.trim()) data.rejectReason = r.trim().slice(0, 200);
         await updateDoc(doc(db, "businesses", g.venueId, "gigRequests", g.id), data);
+        if (g.seriesId && g.seriesStopId) await updateDoc(doc(db, "series", g.seriesId, "stops", g.seriesStopId), { status: "declined", decidedAt: serverTimestamp() }).catch(() => {});
         S.gigs = S.gigs.filter((x) => x.id !== g.id); render();
         notify("gigStatus", { venueId: g.venueId, gigId: g.id }); toast("Reddedildi");
       });
@@ -728,6 +736,7 @@ async function approveGig(g) {
   else {
     eventId = uuid();
     const ev = { id: eventId, isRecurring: false, lineup: g.creatorName, creatorId: g.creatorId, creatorName: g.creatorName };
+    if (g.seriesId) { ev.seriesId = g.seriesId; ev.seriesStopId = g.seriesStopId; ev.seriesTitle = g.seriesTitle; }
     fill(ev); events.push(ev);
   }
   if (g.posterBase64) {
@@ -737,6 +746,10 @@ async function approveGig(g) {
   await updateDoc(ref, { events });
   const b = S.biz.find((x) => x.id === g.venueId); if (b) b.events = events;
   await updateDoc(doc(db, "businesses", g.venueId, "gigRequests", g.id), { status: "approved", decidedAt: serverTimestamp(), eventId });
+  if (g.seriesId && g.seriesStopId && !g.changeOf) {
+    await updateDoc(doc(db, "series", g.seriesId, "stops", g.seriesStopId), { status: "confirmed", eventId, decidedAt: serverTimestamp() }).catch(() => {});
+    notify("seriesStop", { seriesId: g.seriesId, stopId: g.seriesStopId, venueId: g.venueId });
+  }
   S.gigs = S.gigs.filter((x) => x.id !== g.id); render();
   notify("gigStatus", { venueId: g.venueId, gigId: g.id });
 }
@@ -1114,7 +1127,7 @@ function openCreator(id) {
         ${["spotify", "soundcloud", "youtube"].filter((k) => c[k]).map((k) => `<b>${k}</b><span><a target="_blank" rel="noopener" href="${esc(c[k])}">${esc(c[k])}</a></span>`).join("")}
       </div>
       <div class="btns">${daysSelect()}<button class="b acc" data-a="feat">Öne çıkar</button>${feat ? `<button class="b" data-a="unfeat">Öne çıkarmayı kaldır</button>` : ""}
-        <button class="b" data-a="ver">${c.verified ? "Onay rozetini kaldır" : "Onay rozeti ver"}</button><button class="b" data-a="u">Kullanıcı hesabı</button><button class="b bad" data-a="del">Sanatçı sayfasını sil</button></div>
+        <button class="b" data-a="ver">${c.verified ? "Onay rozetini kaldır" : "Onay rozeti ver"}</button><button class="b" data-a="cc">Ülke: ${esc(c.countryCode || "TR (varsayılan)")}</button><button class="b" data-a="u">Kullanıcı hesabı</button><button class="b bad" data-a="del">Sanatçı sayfasını sil</button></div>
       </div>
       <h3>Etkinlikleri (${gigs.length})</h3><div id="cEv"></div>`;
     fillUsers(body);
@@ -1122,6 +1135,11 @@ function openCreator(id) {
     $('[data-a="unfeat"]', body)?.addEventListener("click", (e) => guard(e.target, async () => { await setFeatured("artist", { creatorId: id }, null); toast("Kaldırıldı"); openCreator(id); }));
     $('[data-a="ver"]', body).onclick = (e) => guard(e.target, async () => { await updateDoc(doc(db, "creators", id), { verified: !c.verified }); toast("Güncellendi"); openCreator(id); });
     $('[data-a="u"]', body).onclick = () => openUser(c.ownerId);
+    $('[data-a="cc"]', body).onclick = (e) => {
+      const v = prompt("Sanatçının ülke kodu (iki harf, ör. TR, DE, GB). Marka ülke kuralları buna göre uygulanır:", c.countryCode || "TR"); if (v === null) return;
+      const code = v.trim().toUpperCase(); if (!/^[A-Z]{2}$/.test(code)) return toast("İki harfli kod yaz");
+      guard(e.target, async () => { await updateDoc(doc(db, "creators", id), { countryCode: code }); toast("Kaydedildi"); openCreator(id); });
+    };
     $('[data-a="del"]', body).onclick = (e) => {
       if (!confirm("“" + c.name + "” sanatçı sayfası silinsin mi? Kullanıcı hesabı silinmez.")) return;
       guard(e.target, async () => {
@@ -1280,6 +1298,282 @@ function viewTools(m) {
     const r = await fetch(PUSH, { method: "POST", headers: { Authorization: "Bearer " + t, "Content-Type": "application/json" }, body: JSON.stringify({ type: "cleanup" }) });
     const out = $("#clr"); out.style.display = "block"; out.textContent = JSON.stringify(await r.json(), null, 2);
   });
+}
+
+// ================= MARKALAR =================
+const SECTORS = { "": "Diğer / genel", energy: "Enerji içeceği", soft: "Meşrubat", telecom: "Telekom", bank: "Banka / finans", music: "Müzik platformu", fashion: "Giyim / moda", auto: "Otomotiv", tech: "Teknoloji", alcohol: "Alkollü içki (kısıtlı)", tobacco: "Tütün (kısıtlı)", betting: "Bahis (kısıtlı)" };
+const BKIND_TR = { eventSponsor: "Resmî sponsor (etkinlik)", eventSupport: "Etkinlik desteği", venuePartner: "Marka partneri (mekân)", artistPartner: "Marka partneri (sanatçı)", seriesSponsor: "Resmî sponsor (seri)", seriesSupport: "Seri desteği" };
+const KIND_TYPE = { eventSponsor: "event", eventSupport: "event", venuePartner: "venue", artistPartner: "artist", seriesSponsor: "series", seriesSupport: "series" };
+const LINK_ST = { pending: ["Onay bekliyor", "warn"], active: ["Aktif", "ok"], rejected: ["Reddedildi", "bad"], ended: ["Bitirildi", ""], expired: ["Süresi doldu", ""], hidden: ["Admin gizledi", "bad"] };
+const seal = (b, size = 64) => `<span class="seal" style="width:${size}px;height:${size}px"><span class="seal-disc" style="background:${b.logoBg === "dark" ? "#161616" : "#fff"}">${b.logo ? `<img src="data:image/png;base64,${esc(b.logo)}" alt="">` : "logo yok"}</span></span>`;
+async function loadBrands(force) {
+  if (!S.brands || force) S.brands = docs(await getDocs(collection(db, "brands"))).sort((a, b) => String(a.name).localeCompare(String(b.name), "tr"));
+  return S.brands;
+}
+async function loadLinks(force) {
+  if (!S.links || force) S.links = docs(await getDocs(query(collection(db, "brandLinks"), limit(1000)))).sort((a, b) => (toDate(b.createdAt) || 0) - (toDate(a.createdAt) || 0));
+  return S.links;
+}
+async function uidsOfUsernames(text) {
+  const names = String(text || "").split(/[,\s]+/).map((x) => x.replace("@", "").trim().toLowerCase()).filter(Boolean);
+  const out = [];
+  for (const n of names) {
+    const s = await getDocs(query(collection(db, "users"), where("usernameLower", "==", n), limit(1)));
+    if (s.empty) throw new Error("Kullanıcı bulunamadı: @" + n);
+    out.push(s.docs[0].id);
+  }
+  return out;
+}
+function readLogo(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onerror = () => rej(new Error("Dosya okunamadı"));
+    r.onload = () => {
+      const im = new Image();
+      im.onload = () => {
+        // Oran korunur, en uzun kenar 480 px; şeffaflık korunur (PNG)
+        const k = Math.min(1, 480 / Math.max(im.width, im.height));
+        const c = document.createElement("canvas"); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+        const b64 = c.toDataURL("image/png").split(",")[1];
+        if (b64.length > 160000) return rej(new Error("Logo çok büyük. Daha sade / küçük bir PNG dene."));
+        res(b64);
+      };
+      im.onerror = () => rej(new Error("Görsel açılamadı (PNG/JPG kullan)"));
+      im.src = r.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+
+function viewBrands(m) {
+  m.innerHTML = `<div class="toolbar"><button class="b acc" id="nb">+ Yeni marka</button><button class="b" id="rules">Ülke kuralları</button><span class="muted" id="bc"></span></div><div id="bl"><div class="loading">Yükleniyor…</div></div>
+    <p class="muted">Marka profilini yalnızca admin açar. Logo kullanım iznini ve yetki belgesini kontrol etmeden “Doğrulanmış” yapma. Doğrulama, markanın bir mekân ya da sanatçıyla ilişkisi olduğunu göstermez; her bağlantı ayrıca iki tarafça onaylanır.</p>`;
+  $("#nb").onclick = () => openBrand(null);
+  $("#rules").onclick = () => openRules();
+  guard(null, async () => {
+    const list = await loadBrands(true); const links = await loadLinks(true);
+    $("#bc").textContent = list.length + " marka";
+    const box = $("#bl"); box.innerHTML = "";
+    if (!list.length) return empty(box, "Henüz marka yok.");
+    for (const b of list) {
+      const act = links.filter((l) => l.brandId === b.id && l.status === "active" && isFuture(l.endAt)).length;
+      const pend = links.filter((l) => l.brandId === b.id && l.status === "pending").length;
+      const d = card(box, `<div class="row" style="align-items:center">${seal(b, 56)}<div class="grow">
+        <div class="title">${esc(b.name)} ${b.verified ? `<span class="chip ok">Doğrulanmış</span>` : `<span class="chip warn">Doğrulanmamış</span>`} ${b.status === "suspended" ? `<span class="chip bad">Askıda</span>` : ""}</div>
+        <div class="muted">${esc(SECTORS[b.sector || ""] || b.sector)} · ${act} aktif · ${pend} bekleyen · yöneticiler: ${(b.managerIds || []).map(uname).join(", ") || "—"}</div></div>
+        <button class="b" data-a="e">Düzenle</button></div>`);
+      $('[data-a="e"]', d).onclick = () => openBrand(b);
+    }
+  });
+}
+function openBrand(b) {
+  openDrawer(b ? b.name : "Yeni marka", async (body) => {
+    const x = b || { name: "", sector: "", logoBg: "light", about: "", website: "", instagram: "", verified: false, status: "active", managerIds: [], logo: "" };
+    const mgrNames = [];
+    for (const u of x.managerIds || []) { const s = await getDoc(doc(db, "users", u)).catch(() => null); if (s && s.exists()) mgrNames.push("@" + s.data().username); }
+    body.innerHTML = `
+      <div class="card"><div class="row" style="align-items:center" id="pv">${seal(x, 96)}</div>
+        <label>Logo (PNG, şeffaf arka plan önerilir — oran korunur, kırpılmaz)</label><input type="file" id="lf" accept="image/png,image/jpeg">
+        <label>Logo zemini</label><select id="lb"><option value="light" ${x.logoBg !== "dark" ? "selected" : ""}>Açık (beyaz)</option><option value="dark" ${x.logoBg === "dark" ? "selected" : ""}>Koyu</option></select>
+        <label>Ad</label><input id="bn" value="${esc(x.name)}">
+        <label>Sektör</label><select id="bs">${Object.entries(SECTORS).map(([k, v]) => `<option value="${k}" ${k === (x.sector || "") ? "selected" : ""}>${v}</option>`).join("")}</select>
+        <label>Açıklama</label><textarea id="ba" rows="3">${esc(x.about || "")}</textarea>
+        <label>Web sitesi</label><input id="bw" value="${esc(x.website || "")}">
+        <label>Instagram</label><input id="bi" value="${esc(x.instagram || "")}">
+        <label>Yöneticiler (Noct kullanıcı adları, virgülle)</label><input id="bm" value="${esc(mgrNames.join(", "))}" placeholder="@kullanici1, @kullanici2">
+        <label>Logo kullanım izni / yetki belgesi notu (kim, ne zaman, hangi belge)</label><input id="bc2" value="${esc((x.logoConsent && x.logoConsent.note) || "")}">
+        <label><input type="checkbox" id="bv" ${x.verified ? "checked" : ""} style="width:auto"> Doğrulanmış (belgeler ve logo izni kontrol edildi)</label>
+        <label><input type="checkbox" id="bsu" ${x.status === "suspended" ? "checked" : ""} style="width:auto"> Askıya al (tüm damgalar gizlenir)</label>
+        <div class="btns"><button class="b acc" id="bsave">Kaydet</button>${b ? `<button class="b bad" id="bdel">Markayı sil</button>` : ""}</div>
+      </div>
+      ${b ? `<h3>Bağlantılar</h3><div id="blk"></div>` : ""}`;
+    let logo = x.logo || "";
+    $("#lf", body).onchange = (e) => guard(null, async () => { const f = e.target.files[0]; if (!f) return; logo = await readLogo(f); $("#pv", body).innerHTML = seal({ ...x, logo, logoBg: $("#lb", body).value }, 96); });
+    $("#lb", body).onchange = () => { $("#pv", body).innerHTML = seal({ ...x, logo, logoBg: $("#lb", body).value }, 96); };
+    $("#bsave", body).onclick = (e) => guard(e.target, async () => {
+      const name = $("#bn", body).value.trim(); if (!name) throw new Error("Ad gerekli");
+      const managerIds = await uidsOfUsernames($("#bm", body).value);
+      const data = { name, sector: $("#bs", body).value, logoBg: $("#lb", body).value, logo, about: $("#ba", body).value.trim().slice(0, 400),
+        website: $("#bw", body).value.trim(), instagram: $("#bi", body).value.trim(), managerIds,
+        verified: $("#bv", body).checked, status: $("#bsu", body).checked ? "suspended" : "active",
+        logoConsent: { note: $("#bc2", body).value.trim().slice(0, 300), by: auth.currentUser.uid, at: serverTimestamp() }, updatedAt: serverTimestamp() };
+      if (data.verified && !data.logo) throw new Error("Doğrulamadan önce logo yükle");
+      if (data.verified && !(x.verified)) { data.verifiedAt = serverTimestamp(); data.verifiedBy = auth.currentUser.uid; }
+      if (b) await updateDoc(doc(db, "brands", b.id), data);
+      else { data.createdAt = serverTimestamp(); await setDoc(doc(collection(db, "brands")), data); }
+      toast("Kaydedildi"); closeDrawer(); await loadBrands(true); render();
+    });
+    if (b) {
+      $("#bdel", body).onclick = (e) => {
+        if (!confirm("“" + b.name + "” silinsin mi? Aktif bağlantıları önce bitir.")) return;
+        guard(e.target, async () => { await deleteDoc(doc(db, "brands", b.id)); closeDrawer(); await loadBrands(true); render(); toast("Silindi"); });
+      };
+      const links = (await loadLinks()).filter((l) => l.brandId === b.id);
+      const box = $("#blk", body);
+      if (!links.length) box.innerHTML = `<div class="muted">Bağlantı yok.</div>`;
+      links.forEach((l) => box.appendChild(linkCard(l, () => openBrand(b))));
+    }
+  });
+}
+async function openRules() {
+  openDrawer("Ülke kuralları", async (body) => {
+    const s = await getDoc(doc(db, "config", "brandRules")).catch(() => null);
+    const bl = (s && s.exists() && s.data().blocked) || { alcohol: ["TR"], tobacco: ["TR"], betting: ["TR"] };
+    body.innerHTML = `<div class="card"><p class="muted">Bu sektörlerdeki markalar, listedeki ülkelerdeki mekân / sanatçı / etkinliklere bağlanamaz; o ülkelerdeki izleyicilere damgaları ve marka sayfaları gösterilmez. Ülke kodlarını virgülle yaz (ör. TR, FR). Hukuki görüş almadan listeyi daraltma.</p>
+      ${["alcohol", "tobacco", "betting"].map((k) => `<label>${SECTORS[k]}</label><input data-k="${k}" value="${esc((bl[k] || []).join(", "))}">`).join("")}
+      <div class="btns"><button class="b acc" id="rs">Kaydet</button></div></div>`;
+    $("#rs", body).onclick = (e) => guard(e.target, async () => {
+      const blocked = {};
+      body.querySelectorAll("[data-k]").forEach((i) => { blocked[i.dataset.k] = i.value.split(",").map((x) => x.trim().toUpperCase()).filter((x) => /^[A-Z]{2}$/.test(x)); });
+      await setDoc(doc(db, "config", "brandRules"), { blocked, updatedAt: serverTimestamp(), updatedBy: auth.currentUser.uid });
+      toast("Kaydedildi"); closeDrawer();
+    });
+  });
+}
+
+function linkCard(l, after) {
+  const st = LINK_ST[l.status] || [l.status, ""];
+  const expired = l.status === "active" && !isFuture(l.endAt);
+  const d = el(`<div class="card"><div class="title">${esc(l.brandName)} → ${esc(l.targetName)} <span class="chip ${expired ? "" : st[1]}">${expired ? "Süresi doldu" : st[0]}</span></div>
+    <div class="kv"><b>Tür</b><span>${esc(BKIND_TR[l.kind] || l.kind)}</span><b>Tarihler</b><span>${fmtDay(l.startAt)} – ${fmtDay(l.endAt)}</span>
+      <b>Talep eden</b><span>${l.createdSide === "brand" ? "Marka" : l.createdSide === "admin" ? "Noct (admin)" : "Mekân / sanatçı"} · ${uname(l.createdBy)} · ${fmt(l.createdAt)}</span>
+      <b>Marka onayı</b><span>${l.brandApproval ? uname(l.brandApproval.by) + " · " + fmt(l.brandApproval.at) : "—"}</span>
+      <b>Partner onayı</b><span>${l.targetApproval ? uname(l.targetApproval.by) + " · " + fmt(l.targetApproval.at) : "—"}</span>
+      ${l.endedAt ? `<b>Bitiş</b><span>${l.endedBy ? uname(l.endedBy) : "Sistem"} · ${fmt(l.endedAt)} ${esc(l.endReason || "")}</span>` : ""}
+      ${l.note ? `<b>Not</b><span>${esc(l.note)}</span>` : ""}<b>Ülke</b><span>${esc(l.countryCode || "—")}</span>
+      <b>Kayıt</b><span data-log class="muted">…</span></div>
+    <div class="btns">${l.status === "active" || l.status === "pending" ? `<button class="b" data-a="end">Bitir</button><button class="b bad" data-a="hide">Gizle (kural ihlali)</button>` : ""}</div></div>`);
+  fillUsers(d);
+  getDocs(collection(db, "brandLinks", l.id, "log")).then((s) => {
+    const list = docs(s).sort((a, b) => (toDate(a.at) || 0) - (toDate(b.at) || 0));
+    $("[data-log]", d).innerHTML = list.map((x) => `${fmt(x.at)} · ${esc(x.action)} · ${x.by ? uname(x.by) : "sistem"} (${esc(x.side)})${x.note ? " · “" + esc(x.note) + "”" : ""}`).join("<br>") || "—";
+    fillUsers(d);
+  }).catch(() => {});
+  const finish = async (status, note) => {
+    const at = Timestamp.now();
+    await updateDoc(doc(db, "brandLinks", l.id), { status, endedBy: auth.currentUser.uid, endedAt: at, endReason: note });
+    await setDoc(doc(collection(db, "brandLinks", l.id, "log")), { action: status === "hidden" ? "hidden" : "ended", by: auth.currentUser.uid, side: "admin", at, note });
+    await loadLinks(true); after && after();
+  };
+  $('[data-a="end"]', d)?.addEventListener("click", (e) => { const n = prompt("Bitirme notu (iki taraf görür):", ""); if (n === null) return; guard(e.target, () => finish("ended", n.trim().slice(0, 200))); });
+  $('[data-a="hide"]', d)?.addEventListener("click", (e) => { const n = prompt("Gizleme nedeni (iki taraf görür):", ""); if (n === null) return; guard(e.target, () => finish("hidden", n.trim().slice(0, 200))); });
+  return d;
+}
+
+function viewLinks(m) {
+  m.innerHTML = `<div class="toolbar"><div class="seg" id="lf"><button data-f="pending" class="on">Bekleyen</button><button data-f="active">Aktif</button><button data-f="past">Geçmiş</button><button data-f="all">Tümü</button></div>
+    <button class="b acc" id="nl">+ Admin ile bağlantı ekle</button><span class="muted" id="lc"></span></div><div id="ll"><div class="loading">Yükleniyor…</div></div>`;
+  let f = "pending";
+  const draw = () => {
+    const box = $("#ll"); box.innerHTML = "";
+    let list = S.links || [];
+    if (f === "pending") list = list.filter((l) => l.status === "pending");
+    if (f === "active") list = list.filter((l) => l.status === "active" && isFuture(l.endAt));
+    if (f === "past") list = list.filter((l) => !(l.status === "pending" || (l.status === "active" && isFuture(l.endAt))));
+    $("#lc").textContent = list.length + " bağlantı";
+    if (!list.length) return empty(box, "Bağlantı yok.");
+    list.forEach((l) => box.appendChild(linkCard(l, draw)));
+  };
+  m.querySelectorAll("#lf button").forEach((b) => (b.onclick = () => { m.querySelectorAll("#lf button").forEach((x) => x.classList.toggle("on", x === b)); f = b.dataset.f; draw(); }));
+  $("#nl").onclick = () => openNewLink(draw);
+  guard(null, async () => { await loadBrands(); await loadLinks(true); draw(); });
+}
+// Admin ile ekleme: iki tarafın YAZILI onayı alındıysa (ilk pilot dönemi için)
+function openNewLink(after) {
+  openDrawer("Admin ile bağlantı ekle", async (body) => {
+    const brands = (await loadBrands()).filter((b) => b.verified && b.status !== "suspended");
+    const creators = await loadCreators();
+    const series = docs(await getDocs(query(collection(db, "series"), where("status", "==", "published"), limit(300)))).sort((a, b) => String(a.title).localeCompare(String(b.title), "tr"));
+    const vs = S.biz.filter((b) => b.ownerId || (b.teamIds || []).length);
+    const today = new Date().toISOString().slice(0, 10), later = new Date(Date.now() + 90 * 864e5).toISOString().slice(0, 10);
+    body.innerHTML = `<div class="card">
+      <p class="muted">Sadece iki tarafın da yazılı onayı varken kullan. Onaylar senin adına kaydedilir ve kayıtta “Noct (admin)” görünür.</p>
+      <label>Marka</label><select id="nb">${brands.map((b) => `<option value="${b.id}">${esc(b.name)}</option>`).join("")}</select>
+      <label>Tür</label><select id="nk">${Object.entries(BKIND_TR).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select>
+      <div id="tgt"></div>
+      <label>Başlangıç</label><input type="date" id="ns" value="${today}"><label>Bitiş</label><input type="date" id="ne" value="${later}">
+      <label>Onay belgesi notu</label><input id="nn" placeholder="ör. 12.06 tarihli e-postalar, iki taraf">
+      <div class="btns"><button class="b acc" id="ngo">Ekle</button></div></div>`;
+    const drawTgt = () => {
+      const t = KIND_TYPE[$("#nk", body).value];
+      const box = $("#tgt", body);
+      if (t === "venue" || t === "event") {
+        box.innerHTML = `<label>Mekân</label><select id="nv">${vs.map((v) => `<option value="${v.id}">${esc(v.name)}</option>`).join("")}</select>${t === "event" ? `<label>Etkinlik</label><select id="nev"></select>` : ""}`;
+        const fillEv = () => { const v = vs.find((x) => x.id === $("#nv", body).value); const evs = ((v && v.events) || []).filter((e) => !e.isCancelled && isFuture(e.endTime));
+          if ($("#nev", body)) $("#nev", body).innerHTML = evs.map((e) => `<option value="${esc(e.id)}">${esc(e.title)} · ${fmtDay(e.startTime)}</option>`).join(""); };
+        $("#nv", body).onchange = fillEv; fillEv();
+      } else if (t === "artist") {
+        box.innerHTML = `<label>Sanatçı</label><select id="nc">${creators.filter((c) => c.kind !== "manager").map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}</select>`;
+      } else {
+        box.innerHTML = `<label>Seri</label><select id="nse">${series.map((s) => `<option value="${s.id}">${esc(s.title)} · ${esc(s.ownerName || "")}</option>`).join("")}</select>`;
+      }
+    };
+    $("#nk", body).onchange = drawTgt; drawTgt();
+    $("#ngo", body).onclick = (e) => guard(e.target, async () => {
+      const b = brands.find((x) => x.id === $("#nb", body).value); if (!b) throw new Error("Marka seç");
+      const kind = $("#nk", body).value, t = KIND_TYPE[kind];
+      const start = new Date($("#ns", body).value + "T00:00:00"), end = new Date($("#ne", body).value + "T23:59:00");
+      if (!(end > start) || end < new Date()) throw new Error("Tarihleri kontrol et");
+      if (end - start > 366 * 864e5) throw new Error("En fazla 12 ay");
+      let key, name, venueId = "", eventId = "", creatorId = "", seriesId = "", party = [], country = "";
+      const countryOf = (la, lo) => (!la && !lo) ? "" : (la >= 35.8 && la <= 42.2 && lo >= 25.6 && lo <= 44.9 ? "TR" : "XX");
+      if (t === "venue" || t === "event") {
+        const v = vs.find((x) => x.id === $("#nv", body).value); venueId = v.id; party = [v.ownerId, ...(v.teamIds || [])].filter(Boolean); country = countryOf(v.coordinateLat, v.coordinateLon);
+        if (t === "event") { const ev = (v.events || []).find((x) => x.id === $("#nev", body).value); if (!ev) throw new Error("Etkinlik seç"); eventId = ev.id; key = `event:${v.id}:${ev.id}`; name = `${ev.title} · ${v.name}`; }
+        else { key = `venue:${v.id}`; name = v.name; }
+      } else {
+        const cid = t === "artist" ? $("#nc", body).value : (series.find((s) => s.id === $("#nse", body).value) || {}).ownerCreatorId;
+        const c = creators.find((x) => x.id === cid); if (!c) throw new Error("Profil bulunamadı");
+        creatorId = c.id; party = [...new Set([c.ownerId, ...(c.teamIds || []), ...(((c.delegates || {}).brands) || [])].filter(Boolean))];
+        if (t === "artist") { key = `artist:${c.id}`; name = c.name; country = c.countryCode || "TR"; }
+        else { const s = series.find((x) => x.id === $("#nse", body).value); seriesId = s.id; key = `series:${s.id}`; name = s.title; }
+      }
+      const rules = await getDoc(doc(db, "config", "brandRules")).catch(() => null);
+      const bl = ((rules && rules.exists() && rules.data().blocked) || { alcohol: ["TR"], tobacco: ["TR"], betting: ["TR"] })[b.sector] || [];
+      if (bl.length && t !== "series" && (!country || bl.includes(country))) throw new Error("Bu sektördeki marka bu ülkedeki partnere bağlanamaz");
+      const me = auth.currentUser.uid, at = Timestamp.now(), note = $("#nn", body).value.trim().slice(0, 200);
+      const ref = doc(collection(db, "brandLinks"));
+      await setDoc(ref, { brandId: b.id, brandName: b.name, kind, targetType: t, targetKey: key, targetName: name, venueId, eventId, creatorId, seriesId,
+        startAt: Timestamp.fromDate(start), endAt: Timestamp.fromDate(end), status: "active", createdSide: "admin", createdBy: me, createdAt: at,
+        brandApproval: { by: me, at }, targetApproval: { by: me, at }, countryCode: country, sector: b.sector || "", note,
+        partyIds: [...new Set([...(b.managerIds || []), ...party])].filter(Boolean) });
+      await setDoc(doc(collection(db, "brandLinks", ref.id, "log")), { action: "created", by: me, side: "admin", at, note: note || "İki tarafın yazılı onayıyla admin ekledi" });
+      await setDoc(doc(collection(db, "brandLinks", ref.id, "log")), { action: "approved", by: me, side: "admin", at, note: "" });
+      toast("Eklendi"); closeDrawer(); await loadLinks(true); after && after();
+    });
+  });
+}
+
+// ================= SERİLER =================
+function viewSeries(m) {
+  m.innerHTML = `<div class="toolbar"><input id="sq" placeholder="Seri ya da sanatçı ara…"><span class="muted" id="sc"></span></div><div id="sl"><div class="loading">Yükleniyor…</div></div>`;
+  const draw = () => {
+    const q = trLower($("#sq").value.trim());
+    const list = (S.series || []).filter((s) => !q || trLower(s.title).includes(q) || trLower(s.ownerName).includes(q));
+    $("#sc").textContent = list.length + " seri";
+    const box = $("#sl"); box.innerHTML = "";
+    if (!list.length) return empty(box, "Seri yok.");
+    for (const s of list) {
+      const d = card(box, `<div class="row">${img(s.poster)}<div class="grow"><div class="title">${esc(s.title)} <span class="chip ${s.status === "published" ? "ok" : ""}">${s.status === "published" ? "Yayında" : "Taslak"}</span></div>
+        <div class="muted">${esc(s.kind)} · ${esc(s.ownerName || "")} · oluşturan ${uname(s.createdBy)} · ${ago(s.createdAt)}</div><div data-stops class="muted">…</div></div></div>
+        <div class="btns">${s.status === "published" ? `<button class="b" data-a="un">Yayından kaldır</button>` : ""}<button class="b bad" data-a="del">Seriyi sil</button></div>`);
+      getDocs(collection(db, "series", s.id, "stops")).then((x) => {
+        const st = docs(x).sort((a, b) => (toDate(a.startAt) || 0) - (toDate(b.startAt) || 0));
+        $("[data-stops]", d).innerHTML = st.map((y) => `${fmtDay(y.startAt)} · ${esc(y.venueName)} (${esc(y.city || "")}${y.countryCode ? " " + esc(y.countryCode) : ""}) · <b>${esc(y.status)}</b>`).join("<br>") || "Durak yok";
+      }).catch(() => {});
+      $('[data-a="un"]', d)?.addEventListener("click", (e) => guard(e.target, async () => { await updateDoc(doc(db, "series", s.id), { status: "draft" }); s.status = "draft"; draw(); toast("Yayından kaldırıldı"); }));
+      $('[data-a="del"]', d).onclick = (e) => {
+        if (!confirm("“" + s.title + "” silinsin mi? Mekânların etkinlikleri silinmez.")) return;
+        guard(e.target, async () => {
+          const x = await getDocs(collection(db, "series", s.id, "stops")); await Promise.all(x.docs.map((y) => deleteDoc(y.ref)));
+          await deleteDoc(doc(db, "series", s.id)); S.series = S.series.filter((y) => y.id !== s.id); draw(); toast("Silindi");
+        });
+      };
+    }
+  };
+  $("#sq").oninput = draw;
+  guard(null, async () => { S.series = docs(await getDocs(query(collection(db, "series"), limit(500)))).sort((a, b) => (toDate(b.createdAt) || 0) - (toDate(a.createdAt) || 0)); draw(); });
 }
 </script>
 </body>
