@@ -137,6 +137,7 @@ const TABS = [
   ["reports", "Şikâyetler", () => S.reports.length],
   ["banned", "Askıdakiler", () => 0],
   ["featured", "Öne çıkarma", () => S.featureReqs.length],
+  ["venues", "Mekânlar", () => 0],
   ["places", "Kamuya açık alanlar", () => 0],
   ["tools", "Araçlar", () => 0]
 ];
@@ -185,7 +186,7 @@ function renderTabs() {
 }
 function render() {
   renderTabs();
-  const v = { claims: viewClaims, creators: viewCreators, gigs: viewGigs, reports: viewReports, banned: viewBanned, featured: viewFeatured, places: viewPlaces, tools: viewTools }[S.tab];
+  const v = { claims: viewClaims, creators: viewCreators, gigs: viewGigs, reports: viewReports, banned: viewBanned, featured: viewFeatured, venues: viewVenues, places: viewPlaces, tools: viewTools }[S.tab];
   $("#main").innerHTML = "";
   v($("#main"));
 }
@@ -213,6 +214,7 @@ async function loadAll() {
   const unmanaged = S.publicPlaces.filter((b) => !b.ownerId && !(b.teamIds || []).length && !Object.keys(b.team || {}).length).slice(0, 120);
   const gigSnaps = await Promise.all(unmanaged.map((b) => getDocs(query(collection(db, "businesses", b.id, "gigRequests"), where("status", "==", "pending"))).catch(() => null)));
   S.gigs = gigSnaps.flatMap((s) => (s ? docs(s) : [])).sort((a, b) => (toDate(a.startTime) || 0) - (toDate(b.startTime) || 0));
+  S.venues = null;
   S.loaded = true;
   render();
 }
@@ -535,6 +537,44 @@ async function searchTargets() {
     d.querySelector('[data-a="ver"]').onclick = (e) => guard(e.target, async () => { await updateDoc(doc(db, "creators", c.id), { verified: !c.verified }); toast("Güncellendi"); searchTargets(); });
   }
   if ((qv.length >= 2 || qc.length >= 2) && !out.children.length) out.innerHTML = `<div class="muted" style="margin-top:10px">Sonuç yok.</div>`;
+}
+
+// ---------- MEKÂNLAR (işletmeler) ----------
+async function viewVenues(el) {
+  el.insertAdjacentHTML("beforeend", `<h2>Mekânlar</h2><p class="muted">Noct'a kayıtlı işletmeler (kamuya açık alanlar hariç). Deneme mekânlarını buradan silebilirsin.</p>
+    <input id="vq" placeholder="Mekân ya da il ara…" style="margin:6px 0 12px"><div id="vlist"><div class="empty">Yükleniyor…</div></div>`);
+  if (!S.venues) {
+    const s = await getDocs(collection(db, "businesses"));
+    S.venues = docs(s).filter((b) => !b.isPublic).sort((a, b) => String(a.name).localeCompare(String(b.name), "tr"));
+  }
+  const draw = async () => {
+    const list = $("#vlist"); if (!list) return;
+    const q = $("#vq").value.trim().toLocaleLowerCase("tr");
+    const items = S.venues.filter((v) => !q || String(v.name).toLocaleLowerCase("tr").includes(q) || String(v.province || "").toLocaleLowerCase("tr").includes(q));
+    list.innerHTML = items.length ? "" : `<div class="empty">Mekân yok.</div>`;
+    for (const v of items.slice(0, 150)) {
+      const team = Object.keys(v.team || {}).length;
+      const d = card(list, `<div class="row">${img(v.logoBase64)}<div class="grow">
+          <div class="title">${esc(v.name)} <span class="chip">${esc(v.type || "")}</span></div>
+          <div class="muted">${esc([v.district, v.province, v.country].filter(Boolean).join(", "))} · ${(v.events || []).length} etkinlik · ${v.followerCount || 0} takipçi ${mapLink(v.coordinateLat, v.coordinateLon)}</div>
+          <div class="muted">Sahip: <span data-u="${esc(v.ownerId)}">${v.ownerId ? "…" : "yok"}</span>${team ? ` · ekip ${team} kişi` : ""}</div>
+        </div><button class="b bad" data-a="del">Sil</button></div>`);
+      if (v.ownerId) userOf(v.ownerId).then((u) => { const s = d.querySelector("[data-u]"); if (s) s.textContent = u ? "@" + (u.username || "?") : "hesap yok"; });
+      d.querySelector('[data-a="del"]').onclick = (e) => {
+        if (!confirm("“" + v.name + "” kalıcı olarak silinsin mi?\nEtkinlikleri, afişleri ve fotoğrafları da silinir. Geri alınamaz.")) return;
+        guard(e.target, async () => {
+          for (const sub of ["photos", "posters", "gigRequests", "announcements", "stats"]) {
+            const s = await getDocs(collection(db, "businesses", v.id, sub)).catch(() => null);
+            if (s) await Promise.all(s.docs.map((x) => deleteDoc(x.ref).catch(() => {})));
+          }
+          await deleteDoc(doc(db, "businesses", v.id));
+          S.venues = S.venues.filter((x) => x.id !== v.id); d.remove(); toast("Silindi: " + v.name);
+        });
+      };
+    }
+    if (items.length > 150) list.insertAdjacentHTML("beforeend", `<div class="muted">+${items.length - 150} mekân daha — aramayı daralt.</div>`);
+  };
+  $("#vq").oninput = draw; draw();
 }
 
 // ---------- KAMUYA AÇIK ALANLAR ----------
