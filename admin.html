@@ -150,7 +150,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--soft);padding:12
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, query, where, orderBy, limit, startAfter, documentId, serverTimestamp, deleteField, arrayUnion, arrayRemove, Timestamp, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, query, where, orderBy, limit, startAfter, documentId, serverTimestamp, deleteField, arrayUnion, arrayRemove, Timestamp, getCountFromServer, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Firebase web ayarı. Gizli bilgi değildir: güvenliği Firestore kuralları sağlar (sadece admins listesindekiler yönetebilir).
 const firebaseConfig = {
@@ -269,7 +269,7 @@ function card(parent, html, cls = "") { const d = el(`<div class="card ${cls}">$
 function empty(parent, text) { parent.insertAdjacentHTML("beforeend", `<div class="empty">${text}</div>`); }
 
 // ================= durum =================
-const S = { page: "overview", biz: [], venueClaims: [], creatorClaims: [], gigs: [], reports: [], banned: [], featureReqs: [], creators: null, bannedSet: new Set() };
+const S = { threads: [], page: "overview", biz: [], venueClaims: [], creatorClaims: [], gigs: [], reports: [], banned: [], featureReqs: [], creators: null, bannedSet: new Set() };
 const unmanaged = (b) => b.isPublic && !b.ownerId && !Object.keys(b.team || {}).length && !(b.teamIds || []).length;
 const PAGES = [
   { g: "Genel", k: "overview", ic: "◎", t: "Genel bakış", v: viewOverview },
@@ -278,6 +278,7 @@ const PAGES = [
   { g: "Onay bekleyenler", k: "gigs", ic: "📅", t: "Etkinlik önerileri", n: () => S.gigs.length, v: viewGigs },
   { g: "Onay bekleyenler", k: "featured", ic: "✦", t: "Öne çıkarma", n: () => S.featureReqs.length, v: viewFeatured },
   { g: "Onay bekleyenler", k: "reports", ic: "⚑", t: "Şikâyetler", n: () => S.reports.length, v: viewReports },
+  { g: "Onay bekleyenler", k: "inbox", ic: "✉", t: "Mesajlar", n: () => S.threads.filter((t) => (t.unreadAdmin || 0) > 0).length, v: viewInbox },
   { g: "Veriler", k: "users", ic: "👤", t: "Kullanıcılar", v: viewUsers },
   { g: "Veriler", k: "venues", ic: "🍸", t: "Mekânlar", v: viewVenues },
   { g: "Veriler", k: "creators", ic: "🎧", t: "Sanatçılar", v: viewCreators },
@@ -361,6 +362,7 @@ async function loadCore() {
     pend("featureRequests"),
     getDocs(collection(db, "businesses"))
   ]);
+  try { S.threads = docs(await getDocs(query(collection(db, "support"), orderBy("lastAt", "desc"), limit(150)))); } catch { S.threads = []; }
   const byOld = (a, b) => (toDate(a.createdAt) || 0) - (toDate(b.createdAt) || 0);
   S.venueClaims = docs(vc).sort(byOld);
   S.creatorClaims = docs(cc).sort(byOld);
@@ -462,12 +464,63 @@ function statBox(l, v, s = "", cls = "", goTo = "", id = "") {
 }
 
 // ================= MEKÂN BAŞVURULARI =================
+const T_APPROVE = [
+  ["Onay", "Tebrikler! {v} başvurun onaylandı 🎉 Mekânın artık Noct'ta seninle. Profilinin üstündeki hesap değiştiriciden işletme paneline geçebilirsin."],
+  ["Onay (ekip)", "{v} başvurun onaylandı ✓ Artık mekânın ekibindesin. İşletme paneline profilinin üstündeki hesap değiştiriciden ulaşabilirsin."]
+];
+const T_REJECT = [
+  ["Belge okunamadı", "{v} başvurunu şimdilik onaylayamadık: yüklediğin belge okunamıyor. Düz bir zeminde, iyi ışıkta net bir fotoğrafla yeniden başvurabilirsin."],
+  ["Belge eşleşmiyor", "{v} başvurunu onaylayamadık: belgedeki işletme adı ya da adresi mekânla eşleşmiyor. Mekânın adına kayıtlı bir belgeyle yeniden başvurabilirsin."],
+  ["Yetki doğrulanamadı", "{v} başvurunda mekânı yönetme yetkini doğrulayamadık. Mekân sahibinden imzalı bir yetki yazısıyla yeniden başvurabilirsin."],
+  ["Zaten ekibi var", "{v} için zaten bir yönetici ekip var. Ekipten seni uygulama içinden davet etmelerini isteyebilirsin."],
+  ["Ulaşılamadı", "{v} başvurunu doğrulamak için seni aradık ama ulaşamadık. Doğru telefon numarasıyla yeniden başvurabilirsin."]
+];
+const T_DOCS = [
+  ["Mekân belgesi", "{v} başvurun için mekânın adına kayıtlı bir belge daha yükler misin? Vergi levhası, işletme ruhsatı ya da faaliyet belgesi olabilir."],
+  ["Yetki yazısı", "{v} başvurunda mekânın sahibi değilsen, sahibinden imzalı bir yetki yazısı yükler misin?"],
+  ["Daha net fotoğraf", "{v} başvurunda yüklediğin belge tam okunmuyor. Düz bir zeminde, iyi ışıkta daha net bir fotoğraf yükler misin?"]
+];
+// Hazır metin seçilebilen yazma kutusu
+function composer(parent, { title, templates, venue, button, cls = "acc", onSend }) {
+  const fill = (t) => t.replaceAll("{v}", venue || "");
+  const box = el(`<div class="card" style="background:#fafafc;margin-top:12px">
+    <b>${esc(title)}</b>
+    <div class="btns" style="margin-top:8px">${templates.map((t, i) => `<button class="b sm" data-t="${i}">${esc(t[0])}</button>`).join("")}</div>
+    <textarea style="margin-top:10px;min-height:90px" placeholder="Mesajını yaz ya da hazır metin seç…"></textarea>
+    <div class="btns"><button class="b ${cls}" data-a="send">${esc(button)}</button><button class="b" data-a="x">Vazgeç</button>
+      <span class="muted">Kullanıcı bunu Ayarlar → Noct'tan mesajlar'da görür.</span></div></div>`);
+  const ta = $("textarea", box);
+  box.querySelectorAll("[data-t]").forEach((b) => (b.onclick = () => { ta.value = fill(templates[+b.dataset.t][1]); ta.focus(); }));
+  if (templates.length) ta.value = fill(templates[0][1]);
+  $('[data-a="x"]', box).onclick = () => box.remove();
+  $('[data-a="send"]', box).onclick = (e) => guard(e.target, async () => {
+    const t = ta.value.trim(); if (!t) throw new Error("Mesaj boş olamaz");
+    await onSend(t); box.remove();
+  });
+  parent.querySelectorAll(".composerbox").forEach((x) => x.remove());
+  box.classList.add("composerbox");
+  parent.appendChild(box);
+  return box;
+}
+// Noct ekibi adına mesaj
+async function sendNoct(uid, text, extra = {}, push = true) {
+  const u = await userOf(uid);
+  await setDoc(doc(collection(db, "support", uid, "messages")), { from: "noct", text, createdAt: serverTimestamp(), ...extra });
+  await setDoc(doc(db, "support", uid), { uid, username: (u && u.username) || "", lastAt: serverTimestamp(), lastFrom: "noct",
+    lastText: text.slice(0, 120), unreadUser: increment(1), unreadAdmin: 0 }, { merge: true });
+  if (push) notify("supportMessage", { uid });
+}
+async function deleteClaimDocs(id) {
+  const s = await getDocs(collection(db, "venueClaims", id, "docs")).catch(() => null);
+  if (s) await Promise.all(s.docs.map((d) => deleteDoc(d.ref).catch(() => {})));
+}
+const DOC_TR = { tax: "Vergi levhası", license: "İşletme ruhsatı", registry: "Ticaret sicil / faaliyet", authorization: "Yetki yazısı", other: "Diğer" };
 function viewClaims(m) {
   if (!S.venueClaims.length) return empty(m, "Bekleyen mekân başvurusu yok. 🎉");
   for (const c of S.venueClaims) {
     const d = card(m, `
       <div class="row"><div class="grow">
-        <div class="title">${esc(c.venueName)} <span class="chip p">${esc(ROLE_TR[c.role] || c.role)}</span> ${c.venueId ? `<span class="chip">Noct'ta kayıtlı yer</span>` : `<span class="chip warn">Yeni mekân açılacak</span>`}</div>
+        <div class="title">${esc(c.venueName)} <span class="chip p">${esc(ROLE_TR[c.role] || c.role)}</span> ${c.venueId ? `<span class="chip">Noct'ta kayıtlı yer</span>` : `<span class="chip warn">Yeni mekân açılacak</span>`} ${c.needsDocs ? `<span class="chip warn">Ek belge bekleniyor</span>` : ""}</div>
         <div class="muted">${ago(c.createdAt)}</div>
         <div class="kv">
           <b>Başvuran</b><span>${esc(c.fullName)} · ${uname(c.userId)}</span>
@@ -475,17 +528,33 @@ function viewClaims(m) {
           <b>Tür</b><span>${esc(c.venueType || "—")}</span>
           <b>Adres</b><span>${esc(c.venueAddress || "—")} ${mapLink(c.lat, c.lon)}</span>
           ${c.note ? `<b>Not</b><span>${esc(c.note)}</span>` : ""}
+          <b>Belgeler</b><span data-docs><span class="muted">yükleniyor…</span></span>
         </div></div></div>
-      <div class="btns"><button class="b ok" data-a="ok">Onayla</button><button class="b bad" data-a="no">Reddet</button></div>`);
-    $('[data-a="ok"]', d).onclick = (e) => guard(e.target, async () => { await approveClaim(c); toast("Onaylandı: " + c.venueName); });
-    $('[data-a="no"]', d).onclick = (e) => {
-      const note = prompt("Red sebebi (başvurana gösterilir, boş bırakılabilir):", ""); if (note === null) return;
-      guard(e.target, async () => {
-        await updateDoc(doc(db, "venueClaims", c.id), { status: "rejected", adminNote: note.trim().slice(0, 200), reviewedAt: serverTimestamp() });
+      <div class="btns"><button class="b ok" data-a="ok">Onayla…</button><button class="b" data-a="docs">Ek belge iste…</button><button class="b bad" data-a="no">Reddet…</button><button class="b" data-a="msg">Mesaj yaz…</button></div>`);
+    // belgeler
+    getDocs(collection(db, "venueClaims", c.id, "docs")).then((s) => {
+      const box = $("[data-docs]", d);
+      const list = docs(s).sort((a, b) => (toDate(a.createdAt) || 0) - (toDate(b.createdAt) || 0));
+      box.innerHTML = list.length ? `<div class="row" style="gap:8px">${list.map((x) => `<div style="text-align:center">${img(x.img)}<div class="muted" style="font-size:11px">${esc(DOC_TR[x.type] || x.type)}</div></div>`).join("")}</div>`
+                                  : `<span class="chip bad">Belge yok</span>`;
+    }).catch(() => { $("[data-docs]", d).innerHTML = `<span class="chip bad">Okunamadı</span>`; });
+    $('[data-a="ok"]', d).onclick = () => composer(d, { title: "Onay mesajı", templates: T_APPROVE, venue: c.venueName, button: "Onayla ve gönder", cls: "ok",
+      onSend: async (t) => { await approveClaim(c); await sendNoct(c.userId, t, { claimId: c.id }, false); await deleteClaimDocs(c.id); toast("Onaylandı: " + c.venueName); } });
+    $('[data-a="no"]', d).onclick = () => composer(d, { title: "Red nedeni", templates: T_REJECT, venue: c.venueName, button: "Reddet ve gönder", cls: "bad",
+      onSend: async (t) => {
+        await updateDoc(doc(db, "venueClaims", c.id), { status: "rejected", adminNote: t.slice(0, 200), reviewedAt: serverTimestamp() });
+        await sendNoct(c.userId, t, { claimId: c.id }, false); await deleteClaimDocs(c.id);
         S.venueClaims = S.venueClaims.filter((x) => x.id !== c.id); render();
         notify("claimResult", { col: "venueClaims", id: c.id }); toast("Reddedildi");
-      });
-    };
+      } });
+    $('[data-a="docs"]', d).onclick = () => composer(d, { title: "Ek belge iste", templates: T_DOCS, venue: c.venueName, button: "Belge iste",
+      onSend: async (t) => {
+        await updateDoc(doc(db, "venueClaims", c.id), { needsDocs: true });
+        await sendNoct(c.userId, t, { claimId: c.id, action: "docs" });
+        c.needsDocs = true; render(); toast("Ek belge istendi");
+      } });
+    $('[data-a="msg"]', d).onclick = () => composer(d, { title: "Mesaj", templates: [], venue: c.venueName, button: "Gönder",
+      onSend: async (t) => { await sendNoct(c.userId, t, { claimId: c.id }); toast("Gönderildi"); } });
   }
 }
 async function approveClaim(c) {
@@ -662,6 +731,49 @@ function viewFeatured(m) {
   })();
 }
 
+// ================= MESAJLAR (Noct ekibi ↔ kullanıcı) =================
+const T_GENERAL = [
+  ["Merhaba", "Merhaba! Noct ekibinden yazıyoruz. "],
+  ["İnceleniyor", "Başvurun elimize ulaştı, en kısa sürede inceleyip sana buradan döneceğiz."],
+  ["Teşekkürler", "Teşekkürler, belgelerini aldık. İnceleyip sana buradan haber vereceğiz."]
+];
+function viewInbox(m) {
+  if (!S.threads.length) return empty(m, "Henüz mesaj yok.");
+  const wrap = el(`<div class="tblwrap"><table class="tbl"><thead><tr><th>Kişi</th><th>Son mesaj</th><th>Zaman</th><th></th></tr></thead><tbody></tbody></table></div>`);
+  m.appendChild(wrap);
+  for (const t of S.threads) {
+    const tr = el(`<table><tr class="click"><td><b>@${esc(t.username || t.uid || t.id)}</b></td>
+      <td>${t.lastFrom === "user" ? "" : `<span class="chip p">Noct</span>`} ${esc(t.lastText || "")}</td><td>${ago(t.lastAt)}</td>
+      <td>${(t.unreadAdmin || 0) > 0 ? `<span class="chip bad">${t.unreadAdmin} yeni</span>` : ""}</td></tr></table>`).querySelector("tr");
+    tr.onclick = () => openThread(t.id);
+    $("tbody", wrap).appendChild(tr);
+  }
+}
+function openThread(uid) {
+  openDrawer("Mesajlar", async (body) => {
+    const u = await userOf(uid);
+    const s = await getDocs(query(collection(db, "support", uid, "messages"), orderBy("createdAt", "asc"), limit(300)));
+    const msgs = docs(s);
+    body.innerHTML = `<div class="row" style="align-items:center;margin-bottom:12px">${avatar(u)}<div class="grow"><b>@${esc((u && u.username) || uid)}</b></div><button class="b sm" data-a="u">Profil</button></div>
+      <div id="thr"></div>`;
+    $('[data-a="u"]', body).onclick = () => openUser(uid);
+    const thr = $("#thr", body);
+    for (const x of msgs) {
+      const mine = x.from === "noct";
+      thr.insertAdjacentHTML("beforeend", `<div style="display:flex;justify-content:${mine ? "flex-end" : "flex-start"};margin:6px 0">
+        <div style="max-width:80%;padding:10px 12px;border-radius:14px;background:${mine ? "var(--accSoft)" : "var(--card)"};border:1px solid var(--line)">
+          ${mine ? `<div class="muted" style="font-size:11px;font-weight:700;color:var(--acc)">Noct ekibi${x.action === "docs" ? " · belge istendi" : ""}</div>` : ""}
+          <div style="white-space:pre-wrap">${esc(x.text)}</div><div class="muted" style="font-size:11px">${fmt(x.createdAt)}</div></div></div>`);
+    }
+    if (!msgs.length) thr.innerHTML = `<div class="muted">Mesaj yok.</div>`;
+    composer(body, { title: "Yanıt yaz", templates: T_GENERAL, venue: "", button: "Gönder",
+      onSend: async (t) => { await sendNoct(uid, t); toast("Gönderildi"); openThread(uid); } });
+    // okundu
+    const th = S.threads.find((x) => x.id === uid);
+    if (th && th.unreadAdmin) { th.unreadAdmin = 0; renderNav(); updateDoc(doc(db, "support", uid), { unreadAdmin: 0 }).catch(() => {}); }
+  });
+}
+
 // ================= ŞİKÂYETLER =================
 function viewReports(m) {
   if (!S.reports.length) return empty(m, "Açık şikâyet yok. 🎉");
@@ -760,7 +872,7 @@ function openUser(uid) {
         ${pr.currentVenueId ? `<b>Şu an</b><span>${esc((S.biz.find((b) => b.id === pr.currentVenueId) || {}).name || "bir mekânda")}</span>` : ""}
         <b>Kimlik</b><span style="font-family:monospace;font-size:12px">${esc(uid)}</span>
       </div>
-      <div class="btns">${banned ? `<button class="b" data-a="unban">Askıyı kaldır</button>` : `<button class="b bad" data-a="ban">Hesabı askıya al</button>`}${cr && cr.exists() ? `<button class="b" data-a="cr">Sanatçı sayfası</button>` : ""}</div>
+      <div class="btns"><button class="b acc" data-a="msgu">Mesaj gönder</button>${banned ? `<button class="b" data-a="unban">Askıyı kaldır</button>` : `<button class="b bad" data-a="ban">Hesabı askıya al</button>`}${cr && cr.exists() ? `<button class="b" data-a="cr">Sanatçı sayfası</button>` : ""}</div>
       </div>
       <h3>İşlettiği mekânlar (${owned.length})</h3>
       <div id="uOwned">${owned.map((b) => `<div class="card" style="padding:10px 14px;cursor:pointer" data-v="${b.id}"><b>${esc(b.name)}</b> <span class="chip p">${b.ownerId === uid ? "Sahip" : esc(ROLE_TR[(b.team || {})[uid]] || "Ekip")}</span></div>`).join("") || `<div class="muted">Yok.</div>`}</div>
@@ -771,6 +883,7 @@ function openUser(uid) {
     $('[data-a="ban"]', body)?.addEventListener("click", (e) => guard(e.target, async () => { if (await banUser(uid)) openUser(uid); }));
     $('[data-a="unban"]', body)?.addEventListener("click", (e) => guard(e.target, async () => { await unbanUser(uid); openUser(uid); }));
     $('[data-a="cr"]', body)?.addEventListener("click", () => openCreator(uid));
+    $('[data-a="msgu"]', body).onclick = () => openThread(uid);
     body.querySelectorAll("[data-v]").forEach((r) => (r.onclick = () => openVenue(r.dataset.v)));
     const g = $("#uMoms", body);
     if (moms) docs(moms).sort((a, b) => (toDate(b.timestamp) || 0) - (toDate(a.timestamp) || 0)).forEach((mo) => g.appendChild(momentTile(mo)));
