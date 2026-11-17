@@ -5,64 +5,154 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
 <title>Noct · Yönetim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0b0b10;--card:#15151e;--card2:#1c1c28;--line:#2a2a3a;--text:#ececf1;--muted:#9a9aa8;--acc1:#8b5cf6;--acc2:#ec4899;--ok:#22c55e;--bad:#ef4444;--warn:#f59e0b}
+:root{
+  --bg:#f5f5f8;--card:#ffffff;--soft:#f2f1f7;--line:#e6e5ee;--text:#16151d;--muted:#6e6c7c;
+  --acc:#7c3aed;--acc2:#db2777;--accSoft:#f3edff;--ok:#16a34a;--okSoft:#e8f7ee;--bad:#dc2626;--badSoft:#fdecec;--warn:#d97706;--warnSoft:#fff4e0;
+  --shadow:0 1px 2px rgba(20,18,40,.04),0 4px 14px rgba(20,18,40,.05);
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-a{color:#c4b5fd}
-header{position:sticky;top:0;z-index:5;background:rgba(11,11,16,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.top{max-width:1100px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px}
-.logo{font-weight:900;font-size:24px;letter-spacing:-.5px;background:linear-gradient(90deg,var(--acc1),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
-.who{margin-left:auto;color:var(--muted);font-size:13px;display:flex;gap:10px;align-items:center}
-nav{max-width:1100px;margin:0 auto;padding:0 12px 10px;display:flex;gap:6px;overflow-x:auto}
-nav button{flex:none;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-weight:600;cursor:pointer;font-size:14px}
-nav button.on{background:linear-gradient(90deg,var(--acc1),var(--acc2));border-color:transparent}
-.badge{display:inline-block;min-width:20px;padding:0 6px;margin-left:6px;border-radius:999px;background:var(--bad);font-size:12px;line-height:20px;text-align:center}
-main{max-width:1100px;margin:0 auto;padding:18px 16px 80px}
-h2{font-size:20px;margin:6px 0 14px}
-h3{font-size:15px;margin:22px 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:0 0 12px}
-.row{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
-.grow{flex:1;min-width:220px}
-.title{font-weight:700;font-size:16px}
+html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+button{font:inherit}
+.grad{background:linear-gradient(90deg,var(--acc),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* yerleşim */
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+aside{background:var(--card);border-right:1px solid var(--line);padding:18px 12px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{display:flex;align-items:baseline;gap:8px;padding:4px 10px 18px}
+.brand b{font-size:26px;font-weight:800;letter-spacing:-.6px}
+.brand span{color:var(--muted);font-size:12px;font-weight:600}
+.navgroup{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin:16px 10px 6px}
+.navbtn{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;color:var(--text);padding:8px 10px;border-radius:10px;cursor:pointer;font-weight:500;text-align:left}
+.navbtn:hover{background:var(--soft)}
+.navbtn.on{background:var(--accSoft);color:var(--acc);font-weight:700}
+.navbtn .ic{width:20px;text-align:center;font-size:15px}
+.navbtn .cnt{margin-left:auto;background:var(--bad);color:#fff;border-radius:999px;font-size:11px;font-weight:700;padding:0 7px;line-height:19px}
+.content{min-width:0}
+.topbar{display:flex;align-items:center;gap:12px;padding:14px 28px;background:rgba(245,245,248,.9);backdrop-filter:blur(8px);position:sticky;top:0;z-index:4;border-bottom:1px solid var(--line)}
+.topbar h1{font-size:20px;margin:0;font-weight:800;letter-spacing:-.3px}
+.topbar .sp{flex:1}
+.topbar .who{color:var(--muted);font-size:13px}
+main{padding:22px 28px 80px;max-width:1280px}
+.mobilenav{display:none}
+@media (max-width:900px){
+  .layout{grid-template-columns:1fr}
+  aside{display:none}
+  .mobilenav{display:flex;gap:6px;overflow-x:auto;padding:8px 16px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:57px;z-index:4}
+  .mobilenav button{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-weight:600;cursor:pointer}
+  .mobilenav button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+  .topbar{padding:12px 16px}
+  main{padding:16px 16px 80px}
+  .topbar .who{display:none}
+}
+
+/* bileşenler */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow);margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);cursor:default}
+.stat.link{cursor:pointer}.stat.link:hover{border-color:var(--acc)}
+.stat .l{color:var(--muted);font-size:12px;font-weight:600}
+.stat .v{font-size:28px;font-weight:800;letter-spacing:-.6px;margin-top:2px}
+.stat .s{color:var(--muted);font-size:12px}
+.stat.alert{border-color:#fbcfe8;background:linear-gradient(180deg,#fff,#fff7fb)}
+.stat.alert .v{color:var(--acc2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:900px){.grid2,.grid3{grid-template-columns:1fr}}
+h2{font-size:16px;margin:0 0 12px;font-weight:700}
+h3{font-size:12px;margin:18px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
 .muted{color:var(--muted);font-size:13px}
-.kv{display:grid;grid-template-columns:max-content 1fr;gap:2px 12px;font-size:14px;margin-top:8px}
+.title{font-weight:700;font-size:15px}
+.row{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:200px}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:3px 14px;font-size:13.5px;margin-top:8px}
 .kv b{color:var(--muted);font-weight:500}
-.chip{display:inline-block;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:1px 9px;font-size:12px;margin:2px 4px 2px 0}
-.chip.p{border-color:var(--acc1);color:#ddd6fe}
-.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-button.b{border:0;border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer;font-size:14px;color:#fff;background:var(--card2);border:1px solid var(--line)}
-button.b.ok{background:var(--ok);border-color:transparent;color:#05250f}
-button.b.bad{background:transparent;border-color:var(--bad);color:#fca5a5}
-button.b.acc{background:linear-gradient(90deg,var(--acc1),var(--acc2));border-color:transparent}
-button.b:disabled{opacity:.5;cursor:default}
-input,select,textarea{background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:inherit;width:100%}
-textarea{min-height:60px}
-label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
-.thumb{width:84px;height:84px;object-fit:cover;border-radius:12px;background:var(--card2);cursor:zoom-in}
-.empty{color:var(--muted);text-align:center;padding:40px 0}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#232333;border:1px solid var(--line);padding:10px 16px;border-radius:12px;display:none;z-index:20;max-width:90vw}
-.login{max-width:380px;margin:12vh auto;padding:0 16px}
-.login .card{padding:24px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media (max-width:600px){.grid2{grid-template-columns:1fr}}
-pre{white-space:pre-wrap;word-break:break-word;background:var(--card2);padding:12px;border-radius:10px;font-size:12px}
-.zoom{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:30;cursor:zoom-out}
+.chip{display:inline-block;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:0 9px;font-size:12px;line-height:20px;margin:2px 4px 2px 0;font-weight:500;color:var(--text)}
+.chip.p{background:var(--accSoft);border-color:#ddd0fb;color:var(--acc)}
+.chip.ok{background:var(--okSoft);border-color:#c6ecd3;color:var(--ok)}
+.chip.bad{background:var(--badSoft);border-color:#f8c9c9;color:var(--bad)}
+.chip.warn{background:var(--warnSoft);border-color:#fbe0b0;color:var(--warn)}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.b{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:10px;padding:7px 13px;font-weight:600;cursor:pointer;font-size:13px;white-space:nowrap}
+.b:hover{border-color:#cfcde0}
+.b.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.b.bad{background:var(--card);border-color:#f3b4b4;color:var(--bad)}
+.b.bad:hover{background:var(--badSoft)}
+.b.acc{background:linear-gradient(90deg,var(--acc),var(--acc2));border:0;color:#fff}
+.b.sm{padding:4px 10px;font-size:12px;border-radius:8px}
+.b:disabled{opacity:.5;cursor:default}
+input,select,textarea{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:8px 11px;font:inherit;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid #e5dbff;border-color:var(--acc)}
+select.auto{width:auto}
+label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px;font-weight:600}
+.thumb{width:72px;height:72px;object-fit:cover;border-radius:12px;background:var(--soft);cursor:zoom-in;border:1px solid var(--line)}
+.av{width:36px;height:36px;border-radius:50%;object-fit:cover;background:var(--soft);border:1px solid var(--line);flex:none}
+.av.lg{width:72px;height:72px}
+.avph{width:36px;height:36px;border-radius:50%;background:var(--accSoft);color:var(--acc);display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+.empty{color:var(--muted);text-align:center;padding:36px 0}
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.toolbar input{max-width:340px}
+.seg{display:inline-flex;background:var(--soft);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:5px 12px;border-radius:8px;font-weight:600;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--card);color:var(--text);box-shadow:var(--shadow)}
+
+/* tablo */
+.tbl{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
+.tbl th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:10px 12px;background:#fafafc;border-bottom:1px solid var(--line);font-weight:700}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tr.click{cursor:pointer}.tbl tr.click:hover td{background:#faf8ff}
+.tblwrap{overflow-x:auto;border-radius:16px}
+.who-cell{display:flex;align-items:center;gap:10px}
+.feat{border-color:#c9b5f8;box-shadow:0 0 0 1px rgba(124,58,237,.18),0 6px 18px rgba(124,58,237,.10)}
+
+/* galeri */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
+.tile img{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--soft);cursor:zoom-in}
+.tile .tb{padding:8px 10px}
+
+/* grafik */
+.bars{display:flex;align-items:flex-end;gap:6px;height:120px;padding-top:8px}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+.bar i{display:block;width:100%;max-width:28px;background:linear-gradient(180deg,var(--acc),var(--acc2));border-radius:6px 6px 2px 2px;min-height:2px}
+.bar span{font-size:10px;color:var(--muted)}
+.bar em{font-style:normal;font-size:11px;font-weight:700}
+
+/* çekmece */
+.drawer-bg{position:fixed;inset:0;background:rgba(20,18,40,.35);z-index:20;display:none}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100vw);background:var(--bg);z-index:21;transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column;box-shadow:-10px 0 30px rgba(20,18,40,.12)}
+.drawer.open{transform:none}
+.drawer header{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--card);border-bottom:1px solid var(--line)}
+.drawer header b{font-size:16px}
+.drawer .body{padding:16px 18px 60px;overflow-y:auto}
+.x{margin-left:auto;border:0;background:var(--soft);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#16151d;color:#fff;padding:10px 16px;border-radius:12px;display:none;z-index:40;max-width:90vw;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.zoom{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:50;cursor:zoom-out}
 .zoom img{max-width:94vw;max-height:94vh;border-radius:12px}
-.feat{border-color:var(--acc1);box-shadow:0 0 0 1px rgba(139,92,246,.35),0 0 18px rgba(139,92,246,.15)}
+.login{max-width:400px;margin:12vh auto;padding:0 16px}
+.login .card{padding:28px}
+pre{white-space:pre-wrap;word-break:break-word;background:var(--soft);padding:12px;border-radius:10px;font-size:12px;border:1px solid var(--line)}
+.loading{color:var(--muted);padding:24px 0;text-align:center}
 </style>
 </head>
 <body>
 <div id="app"></div>
+<div class="drawer-bg" id="dbg"></div>
+<div class="drawer" id="drawer"><header><b id="dTitle"></b><button class="x" id="dClose">✕</button></header><div class="body" id="dBody"></div></div>
 <div class="toast" id="toast"></div>
-<div class="zoom" id="zoom" onclick="this.style.display='none'"><img id="zoomImg" alt=""></div>
+<div class="zoom" id="zoom"><img id="zoomImg" alt=""></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, query, where, limit, serverTimestamp, deleteField, arrayUnion, arrayRemove, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, query, where, orderBy, limit, startAfter, serverTimestamp, deleteField, arrayUnion, arrayRemove, Timestamp, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Firebase web ayarı (Firebase konsolu → Proje ayarları → Web uygulaması). Gizli bilgi değildir; güvenliği Firestore kuralları sağlar.
+// Firebase web ayarı. Gizli bilgi değildir: güvenliği Firestore kuralları sağlar (sadece admins listesindekiler yönetebilir).
 const firebaseConfig = {
   apiKey: "AIzaSyDutWy1ZkjkuysJm9JqTQvpzGR59yiGJ88",
   authDomain: "auraapp-75d0c.firebaseapp.com",
@@ -72,34 +162,52 @@ const firebaseConfig = {
   appId: "1:360997024792:ios:f6e070529f52bac9ae3f6d"
 };
 const PUSH = "https://noct-push.tunahanerd7.workers.dev/";
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// ---------- yardımcılar ----------
-const $ = (s) => document.querySelector(s);
+// ================= yardımcılar =================
+const $ = (s, r = document) => r.querySelector(s);
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16))).toUpperCase();
-const toDate = (t) => t ? (t.toDate ? t.toDate() : new Date(t)) : null;
+const uuid = () => crypto.randomUUID().toUpperCase();
+const toDate = (t) => { if (!t) return null; if (t.toDate) return t.toDate(); const d = new Date(t); return isNaN(d) ? null : d; };
 const fmt = (t) => { const d = toDate(t); return d ? d.toLocaleString("tr-TR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"; };
+const fmtDay = (t) => { const d = toDate(t); return d ? d.toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" }) : "—"; };
+const ago = (t) => {
+  const d = toDate(t); if (!d) return "—";
+  const s = (Date.now() - d) / 1000;
+  if (s < 0) return fmt(t);
+  if (s < 3600) return Math.max(1, Math.round(s / 60)) + " dk önce";
+  if (s < 86400) return Math.round(s / 3600) + " sa önce";
+  if (s < 86400 * 30) return Math.round(s / 86400) + " gün önce";
+  return fmtDay(t);
+};
 const daysLeft = (t) => { const d = toDate(t); return d ? Math.max(0, Math.ceil((d - Date.now()) / 864e5)) : 0; };
-const img = (b64) => b64 ? `<img class="thumb" src="${b64.startsWith("data:") || b64.startsWith("http") ? esc(b64) : "data:image/jpeg;base64," + esc(b64)}" onclick="zoomImg(this.src)" alt="">` : "";
-const mapLink = (lat, lon) => (lat || lon) ? `<a target="_blank" rel="noopener" href="https://maps.apple.com/?ll=${lat},${lon}&q=${lat},${lon}">Haritada aç</a>` : "";
-window.zoomImg = (src) => { $("#zoomImg").src = src; $("#zoom").style.display = "flex"; };
+const isFuture = (t) => { const d = toDate(t); return !!d && d > new Date(); };
+const src = (b64) => !b64 ? "" : (b64.startsWith("data:") || b64.startsWith("http") ? b64 : "data:image/jpeg;base64," + b64);
+const img = (b64, cls = "thumb") => b64 ? `<img class="${cls}" src="${esc(src(b64))}" data-zoom alt="">` : "";
+const avatar = (u, lg) => u && u.profileImgBase64 ? `<img class="av ${lg ? "lg" : ""}" src="${esc(src(u.profileImgBase64))}" data-zoom alt="">` : `<div class="avph" ${lg ? 'style="width:72px;height:72px;font-size:26px"' : ""}>${esc(((u && u.username) || "?").slice(0, 1).toUpperCase())}</div>`;
+const mapLink = (lat, lon) => (lat || lon) ? `<a target="_blank" rel="noopener" href="https://maps.apple.com/?ll=${lat},${lon}&q=${lat},${lon}">Harita</a>` : "";
+const place = (b) => [b.district, b.province, b.country].filter(Boolean).join(", ");
+const trLower = (s) => String(s || "").toLocaleLowerCase("tr");
+const docs = (s) => s.docs.map((d) => ({ ...d.data(), id: d.id }));
 function toast(msg, ms = 2600) { const t = $("#toast"); t.textContent = msg; t.style.display = "block"; clearTimeout(t._h); t._h = setTimeout(() => (t.style.display = "none"), ms); }
 async function guard(btn, fn) {
   if (btn) btn.disabled = true;
   try { await fn(); } catch (e) { console.error(e); toast("Hata: " + (e.message || e), 5000); }
-  finally { if (btn) btn.disabled = false; }
+  finally { if (btn && btn.isConnected) btn.disabled = false; }
 }
+document.addEventListener("click", (e) => {
+  const z = e.target.closest("[data-zoom]");
+  if (z) { e.stopPropagation(); $("#zoomImg").src = z.src; $("#zoom").style.display = "flex"; }
+}, true);
+$("#zoom").onclick = () => ($("#zoom").style.display = "none");
 async function notify(type, ref) {
   try {
     const t = await auth.currentUser.getIdToken();
     await fetch(PUSH, { method: "POST", headers: { Authorization: "Bearer " + t, "Content-Type": "application/json" }, body: JSON.stringify({ type, to: [], ref }) });
   } catch (e) { console.warn("bildirim gönderilemedi", e); }
 }
-// Ülke / il / ilçe (harita baloncukları için)
 async function areaOf(lat, lon) {
   try {
     const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=tr&lat=${lat}&lon=${lon}`);
@@ -112,10 +220,17 @@ async function areaOf(lat, lon) {
 const userCache = {};
 async function userOf(uid) {
   if (!uid) return null;
-  if (!(uid in userCache)) { try { const s = await getDoc(doc(db, "users", uid)); userCache[uid] = s.exists() ? s.data() : null; } catch { userCache[uid] = null; } }
+  if (!(uid in userCache)) { try { const s = await getDoc(doc(db, "users", uid)); userCache[uid] = s.exists() ? { ...s.data(), id: uid } : null; } catch { userCache[uid] = null; } }
   return userCache[uid];
 }
-// Uygulamadaki BusinessProfile kaydıyla aynı alanlar
+function fillUsers(root) {
+  root.querySelectorAll("[data-uname]").forEach(async (s) => {
+    const u = await userOf(s.dataset.uname);
+    s.textContent = u ? "@" + (u.username || "?") : (s.dataset.uname ? "silinmiş hesap" : "—");
+    if (u) { s.classList.add("ulink"); s.style.cursor = "pointer"; s.style.color = "var(--acc)"; s.onclick = (e) => { e.stopPropagation(); openUser(u.id); }; }
+  });
+}
+const uname = (uid) => `<span data-uname="${esc(uid || "")}">…</span>`;
 function newBusiness({ id, ownerId = "", uniqueMapId = "", name, type = "Venue", lat = 0, lon = 0, address = "", tags = [] }) {
   return {
     id, ownerId, uniqueMapId, name, type, instagram: "", coordinateLat: Number(lat) || 0, coordinateLon: Number(lon) || 0,
@@ -127,121 +242,236 @@ function newBusiness({ id, ownerId = "", uniqueMapId = "", name, type = "Venue",
 const PUBLIC_TYPES = ["Stadium", "Arena", "Sports Hall", "Concert Hall", "Theatre Hall", "Opera House", "Open-air Theatre", "Ancient Theatre", "Culture Center", "Museum", "Exhibition Center", "Convention Center", "Shopping Mall", "Square", "Park", "Festival Area", "Public Beach", "Pier & Waterfront", "Event Venue"];
 const ROLE_TR = { owner: "Sahip", manager: "Müdür", events: "Etkinlik sorumlusu", staff: "Çalışan" };
 const KIND_TR = { event: "Etkinlik", venue: "Mekân", artist: "Sanatçı" };
+const untilTs = (days) => Timestamp.fromMillis(Date.now() + days * 864e5);
+async function setFeatured(kind, ids, days) {
+  const v = days ? untilTs(days) : deleteField();
+  if (kind === "event") await updateDoc(doc(db, "businesses", ids.venueId), { ["featuredEvents." + ids.eventId]: v });
+  else if (kind === "venue") await updateDoc(doc(db, "businesses", ids.venueId), { featuredUntil: v });
+  else await updateDoc(doc(db, "creators", ids.creatorId), { featuredUntil: v });
+  // yerel kopyayı güncelle
+  const b = ids.venueId && S.biz.find((x) => x.id === ids.venueId);
+  if (b && kind === "event") { b.featuredEvents = b.featuredEvents || {}; if (days) b.featuredEvents[ids.eventId] = v; else delete b.featuredEvents[ids.eventId]; }
+  if (b && kind === "venue") b.featuredUntil = days ? v : null;
+  const c = ids.creatorId && (S.creators || []).find((x) => x.id === ids.creatorId);
+  if (c) c.featuredUntil = days ? v : null;
+}
+const daysSelect = (sel = 7) => `<select class="auto" data-days>${[1, 3, 7, 14, 30].map((d) => `<option value="${d}" ${d === sel ? "selected" : ""}>${d} gün</option>`).join("")}</select>`;
+function el(html) { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+function card(parent, html, cls = "") { const d = el(`<div class="card ${cls}">${html}</div>`); parent.appendChild(d); fillUsers(d); return d; }
+function empty(parent, text) { parent.insertAdjacentHTML("beforeend", `<div class="empty">${text}</div>`); }
 
-// ---------- durum ----------
-const S = { tab: "claims", venueClaims: [], creatorClaims: [], gigs: [], reports: [], banned: [], featureReqs: [], publicPlaces: [], loaded: false };
-const TABS = [
-  ["claims", "Mekân başvuruları", () => S.venueClaims.length],
-  ["creators", "Sanatçı başvuruları", () => S.creatorClaims.length],
-  ["gigs", "Etkinlik önerileri", () => S.gigs.length],
-  ["reports", "Şikâyetler", () => S.reports.length],
-  ["banned", "Askıdakiler", () => 0],
-  ["featured", "Öne çıkarma", () => S.featureReqs.length],
-  ["venues", "Mekânlar", () => 0],
-  ["places", "Kamuya açık alanlar", () => 0],
-  ["tools", "Araçlar", () => 0]
+// ================= durum =================
+const S = { page: "overview", biz: [], venueClaims: [], creatorClaims: [], gigs: [], reports: [], banned: [], featureReqs: [], creators: null, bannedSet: new Set() };
+const unmanaged = (b) => b.isPublic && !b.ownerId && !Object.keys(b.team || {}).length && !(b.teamIds || []).length;
+const PAGES = [
+  { g: "Genel", k: "overview", ic: "◎", t: "Genel bakış", v: viewOverview },
+  { g: "Onay bekleyenler", k: "claims", ic: "🏠", t: "Mekân başvuruları", n: () => S.venueClaims.length, v: viewClaims },
+  { g: "Onay bekleyenler", k: "creatorClaims", ic: "🎤", t: "Sanatçı başvuruları", n: () => S.creatorClaims.length, v: viewCreatorClaims },
+  { g: "Onay bekleyenler", k: "gigs", ic: "📅", t: "Etkinlik önerileri", n: () => S.gigs.length, v: viewGigs },
+  { g: "Onay bekleyenler", k: "featured", ic: "✦", t: "Öne çıkarma", n: () => S.featureReqs.length, v: viewFeatured },
+  { g: "Onay bekleyenler", k: "reports", ic: "⚑", t: "Şikâyetler", n: () => S.reports.length, v: viewReports },
+  { g: "Veriler", k: "users", ic: "👤", t: "Kullanıcılar", v: viewUsers },
+  { g: "Veriler", k: "venues", ic: "🍸", t: "Mekânlar", v: viewVenues },
+  { g: "Veriler", k: "creators", ic: "🎧", t: "Sanatçılar", v: viewCreators },
+  { g: "Veriler", k: "events", ic: "🎟", t: "Etkinlikler", v: viewEvents },
+  { g: "Veriler", k: "moments", ic: "📸", t: "Paylaşımlar", v: viewMoments },
+  { g: "Veriler", k: "places", ic: "🏟", t: "Kamuya açık alanlar", v: viewPlaces },
+  { g: "Sistem", k: "banned", ic: "⛔", t: "Askıdakiler", v: viewBanned },
+  { g: "Sistem", k: "tools", ic: "⚙", t: "Araçlar", v: viewTools }
 ];
 
-// ---------- giriş ----------
+// ================= giriş =================
 function renderLogin(msg = "") {
   $("#app").innerHTML = `
   <div class="login"><div class="card">
-    <div class="logo" style="font-size:40px">Noct</div>
-    <p class="muted" style="margin-top:0">Yönetim paneli · sadece yetkili hesaplar</p>
+    <div style="font-size:38px;font-weight:800;letter-spacing:-1px" class="grad">Noct</div>
+    <p class="muted" style="margin-top:2px">Yönetim paneli · sadece yetkili hesaplar</p>
     <label>E-posta</label><input id="em" type="email" autocomplete="username">
     <label>Şifre</label><input id="pw" type="password" autocomplete="current-password">
-    <div class="btns"><button class="b acc" id="go" style="flex:1">Giriş yap</button></div>
-    <div class="btns"><button class="b" id="gg" style="flex:1">Google ile giriş</button></div>
-    <p class="muted" id="lmsg" style="color:#fca5a5">${esc(msg)}</p>
+    <div class="btns"><button class="b acc" id="go" style="flex:1;padding:10px">Giriş yap</button></div>
+    <div class="btns" style="margin-top:8px"><button class="b" id="gg" style="flex:1;padding:10px">Google ile giriş</button></div>
+    <p id="lmsg" style="color:var(--bad);font-size:13px">${esc(msg)}</p>
   </div></div>`;
-  $("#go").onclick = () => guard($("#go"), async () => { await signInWithEmailAndPassword(auth, $("#em").value.trim(), $("#pw").value); });
+  $("#go").onclick = () => guard($("#go"), () => signInWithEmailAndPassword(auth, $("#em").value.trim(), $("#pw").value));
   $("#pw").onkeydown = (e) => { if (e.key === "Enter") $("#go").click(); };
-  $("#gg").onclick = () => guard($("#gg"), async () => { await signInWithPopup(auth, new GoogleAuthProvider()); });
+  $("#gg").onclick = () => guard($("#gg"), () => signInWithPopup(auth, new GoogleAuthProvider()));
 }
-
 onAuthStateChanged(auth, async (user) => {
   if (!user) return renderLogin();
-  $("#app").innerHTML = `<div class="empty">Kontrol ediliyor…</div>`;
+  $("#app").innerHTML = `<div class="loading">Kontrol ediliyor…</div>`;
   let ok = false;
-  try { ok = (await getDoc(doc(db, "admins", user.uid))).exists(); } catch { ok = false; }
+  try { ok = (await getDoc(doc(db, "admins", user.uid))).exists(); } catch {}
   if (!ok) { await signOut(auth); return renderLogin("Bu hesabın yönetim yetkisi yok."); }
   renderShell();
-  await loadAll();
+  await loadCore();
 });
-
 function renderShell() {
+  const groups = [...new Set(PAGES.map((p) => p.g))];
   $("#app").innerHTML = `
-  <header>
-    <div class="top"><div class="logo">Noct</div><span class="muted">Yönetim</span>
-      <div class="who"><span>${esc(auth.currentUser.email || "")}</span><button class="b" id="rf">Yenile</button><button class="b" id="so">Çıkış</button></div></div>
-    <nav id="tabs"></nav>
-  </header>
-  <main id="main"><div class="empty">Yükleniyor…</div></main>`;
+  <div class="layout">
+    <aside>
+      <div class="brand"><b class="grad">Noct</b><span>Yönetim</span></div>
+      ${groups.map((g) => `<div class="navgroup">${g}</div>` + PAGES.filter((p) => p.g === g).map((p) => `<button class="navbtn" data-p="${p.k}"><span class="ic">${p.ic}</span>${p.t}<span class="cnt" data-c="${p.k}" style="display:none"></span></button>`).join("")).join("")}
+    </aside>
+    <div class="content">
+      <div class="topbar"><h1 id="ptitle"></h1><div class="sp"></div><span class="who">${esc(auth.currentUser.email || "")}</span>
+        <button class="b" id="rf">↻ Yenile</button><button class="b" id="so">Çıkış</button></div>
+      <div class="mobilenav">${PAGES.map((p) => `<button data-p="${p.k}">${p.t}<span data-c="${p.k}"></span></button>`).join("")}</div>
+      <main id="main"><div class="loading">Yükleniyor…</div></main>
+    </div>
+  </div>`;
+  document.querySelectorAll("[data-p]").forEach((b) => (b.onclick = () => go(b.dataset.p)));
   $("#so").onclick = () => signOut(auth);
-  $("#rf").onclick = () => guard($("#rf"), loadAll);
+  $("#rf").onclick = () => guard($("#rf"), async () => { S.creators = null; S.usersPage = null; await loadCore(); });
 }
-function renderTabs() {
-  $("#tabs").innerHTML = TABS.map(([k, t, c]) => `<button data-t="${k}" class="${S.tab === k ? "on" : ""}">${t}${c() ? `<span class="badge">${c()}</span>` : ""}</button>`).join("");
-  document.querySelectorAll("#tabs button").forEach((b) => (b.onclick = () => { S.tab = b.dataset.t; render(); }));
+function go(k) { S.page = k; render(); window.scrollTo(0, 0); }
+function renderNav() {
+  for (const p of PAGES) {
+    const n = p.n ? p.n() : 0;
+    document.querySelectorAll(`[data-c="${p.k}"]`).forEach((c) => {
+      if (c.classList.contains("cnt")) { c.textContent = n; c.style.display = n ? "" : "none"; }
+      else c.textContent = n ? ` (${n})` : "";
+    });
+  }
+  document.querySelectorAll("[data-p]").forEach((b) => b.classList.toggle("on", b.dataset.p === S.page));
 }
 function render() {
-  renderTabs();
-  const v = { claims: viewClaims, creators: viewCreators, gigs: viewGigs, reports: viewReports, banned: viewBanned, featured: viewFeatured, venues: viewVenues, places: viewPlaces, tools: viewTools }[S.tab];
-  $("#main").innerHTML = "";
-  v($("#main"));
+  renderNav();
+  const p = PAGES.find((x) => x.k === S.page);
+  $("#ptitle").textContent = p.t;
+  const m = $("#main"); m.innerHTML = "";
+  p.v(m);
 }
 
-// ---------- yükleme ----------
-const docs = (s) => s.docs.map((d) => ({ ...d.data(), id: d.id }));
-async function loadAll() {
+// ================= yükleme =================
+async function loadCore() {
   const pend = (c) => getDocs(query(collection(db, c), where("status", "==", "pending")));
-  const [vc, cc, rp, bn, fr, pp] = await Promise.all([
+  const [vc, cc, rp, bn, fr, bz] = await Promise.all([
     pend("venueClaims"), pend("creatorClaims"),
-    getDocs(query(collection(db, "reports"), where("status", "==", "open"), limit(100))),
-    getDocs(query(collection(db, "banned"), limit(200))),
+    getDocs(query(collection(db, "reports"), where("status", "==", "open"), limit(200))),
+    getDocs(query(collection(db, "banned"), limit(500))),
     pend("featureRequests"),
-    getDocs(query(collection(db, "businesses"), where("isPublic", "==", true)))
+    getDocs(collection(db, "businesses"))
   ]);
   const byOld = (a, b) => (toDate(a.createdAt) || 0) - (toDate(b.createdAt) || 0);
-  const byNew = (a, b) => -byOld(a, b);
   S.venueClaims = docs(vc).sort(byOld);
   S.creatorClaims = docs(cc).sort(byOld);
-  S.reports = docs(rp).sort(byNew);
-  S.banned = docs(bn).sort(byNew);
+  S.reports = docs(rp).sort((a, b) => -byOld(a, b));
+  S.banned = docs(bn).sort((a, b) => -byOld(a, b));
+  S.bannedSet = new Set(S.banned.map((b) => b.id));
   S.featureReqs = docs(fr).sort(byOld);
-  S.publicPlaces = docs(pp).sort((a, b) => String(a.name).localeCompare(String(b.name), "tr"));
-  // Sahibi / ekibi olmayan kamuya açık alanlara gelen etkinlik önerileri
-  const unmanaged = S.publicPlaces.filter((b) => !b.ownerId && !(b.teamIds || []).length && !Object.keys(b.team || {}).length).slice(0, 120);
-  const gigSnaps = await Promise.all(unmanaged.map((b) => getDocs(query(collection(db, "businesses", b.id, "gigRequests"), where("status", "==", "pending"))).catch(() => null)));
-  S.gigs = gigSnaps.flatMap((s) => (s ? docs(s) : [])).sort((a, b) => (toDate(a.startTime) || 0) - (toDate(b.startTime) || 0));
-  S.venues = null;
-  S.loaded = true;
+  S.biz = docs(bz).sort((a, b) => String(a.name).localeCompare(String(b.name), "tr"));
+  const um = S.biz.filter(unmanaged).slice(0, 150);
+  const gs = await Promise.all(um.map((b) => getDocs(query(collection(db, "businesses", b.id, "gigRequests"), where("status", "==", "pending"))).catch(() => null)));
+  S.gigs = gs.flatMap((s) => (s ? docs(s) : [])).sort((a, b) => (toDate(a.startTime) || 0) - (toDate(b.startTime) || 0));
   render();
 }
-function empty(el, text) { el.insertAdjacentHTML("beforeend", `<div class="empty">${text}</div>`); }
-function card(el, html, cls = "") { const d = document.createElement("div"); d.className = "card " + cls; d.innerHTML = html; el.appendChild(d); return d; }
+async function loadCreators() {
+  if (!S.creators) S.creators = docs(await getDocs(collection(db, "creators"))).sort((a, b) => String(a.name).localeCompare(String(b.name), "tr"));
+  return S.creators;
+}
+const venues = () => S.biz.filter((b) => !b.isPublic);
+const publics = () => S.biz.filter((b) => b.isPublic);
+function allEvents() {
+  const out = [];
+  for (const b of S.biz) for (const e of b.events || []) out.push({ ...e, venue: b, featured: isFuture((b.featuredEvents || {})[e.id]) });
+  return out;
+}
 
-// ---------- MEKÂN BAŞVURULARI ----------
-function viewClaims(el) {
-  el.insertAdjacentHTML("beforeend", `<h2>Mekân başvuruları</h2>`);
-  if (!S.venueClaims.length) return empty(el, "Bekleyen başvuru yok.");
-  for (const c of S.venueClaims) {
-    const d = card(el, `
-      <div class="title">${esc(c.venueName)}</div>
-      <div class="muted">${c.venueId ? "Noct'ta kayıtlı yer" : "Yeni mekân açılacak"} · ${fmt(c.createdAt)}</div>
-      <div class="kv">
-        <b>Rol</b><span>${esc(ROLE_TR[c.role] || c.role)}</span>
-        <b>Başvuran</b><span>${esc(c.fullName)} (@${esc(c.username)})</span>
-        <b>Telefon</b><span>${c.phone ? `<a href="tel:${esc(c.phone)}">${esc(c.phone)}</a>` : "—"}</span>
-        <b>Tür</b><span>${esc(c.venueType || "—")}</span>
-        <b>Adres</b><span>${esc(c.venueAddress || "—")} ${mapLink(c.lat, c.lon)}</span>
-        ${c.note ? `<b>Not</b><span>${esc(c.note)}</span>` : ""}
+// ================= çekmece =================
+function openDrawer(title, build) {
+  $("#dTitle").textContent = title;
+  const body = $("#dBody"); body.innerHTML = `<div class="loading">Yükleniyor…</div>`;
+  $("#drawer").classList.add("open"); $("#dbg").style.display = "block";
+  Promise.resolve(build(body)).catch((e) => { body.innerHTML = `<div class="empty">Hata: ${esc(e.message || e)}</div>`; });
+}
+function closeDrawer() { $("#drawer").classList.remove("open"); $("#dbg").style.display = "none"; }
+$("#dClose").onclick = closeDrawer; $("#dbg").onclick = closeDrawer;
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeDrawer(); $("#zoom").style.display = "none"; } });
+
+// ================= GENEL BAKIŞ =================
+async function viewOverview(m) {
+  const pending = S.venueClaims.length + S.creatorClaims.length + S.gigs.length + S.featureReqs.length + S.reports.length;
+  m.innerHTML = `
+    <div class="stats" id="st1">
+      ${statBox("Bekleyen işler", pending, "Onay ve şikâyet", pending ? "alert" : "", pending ? (S.venueClaims.length ? "claims" : S.creatorClaims.length ? "creatorClaims" : S.gigs.length ? "gigs" : S.featureReqs.length ? "featured" : "reports") : "")}
+      ${statBox("Kullanıcı", "…", "", "", "users", "cUsers")}
+      ${statBox("Yeni (7 gün)", "…", "", "", "users", "cNew")}
+      ${statBox("Aktif (24 saat)", "…", "", "", "users", "cActive")}
+      ${statBox("Mekân", venues().length, `${venues().filter((v) => v.ownerId).length} sahipli`, "", "venues")}
+      ${statBox("Kamuya açık alan", publics().length, "", "", "places")}
+      ${statBox("Sanatçı", "…", "", "", "creators", "cCreators")}
+      ${statBox("Yaklaşan etkinlik", allEvents().filter((e) => isFuture(e.endTime || e.startTime) && !e.isCancelled).length, "", "", "events")}
+      ${statBox("Paylaşım (24 saat)", "…", "", "", "moments", "cMoments")}
+      ${statBox("Askıdaki hesap", S.banned.length, "", "", "banned")}
+    </div>
+    <div class="grid2">
+      <div class="card"><h2>Son 14 gün · yeni kayıtlar</h2><div class="bars" id="chart"><div class="loading" style="width:100%">…</div></div></div>
+      <div class="card"><h2>Bekleyen işler</h2>
+        ${[["claims", "Mekân başvuruları", S.venueClaims.length], ["creatorClaims", "Sanatçı başvuruları", S.creatorClaims.length], ["gigs", "Etkinlik önerileri", S.gigs.length], ["featured", "Öne çıkarma talepleri", S.featureReqs.length], ["reports", "Açık şikâyetler", S.reports.length]]
+          .map(([k, t, n]) => `<div class="row" style="align-items:center;padding:7px 0;border-bottom:1px solid var(--line)"><div class="grow">${t}</div>${n ? `<span class="chip bad">${n}</span>` : `<span class="chip ok">Yok</span>`}<button class="b sm" data-go="${k}">Aç</button></div>`).join("")}
       </div>
+    </div>
+    <div class="grid2">
+      <div class="card"><h2>Son kayıt olanlar</h2><div id="lastUsers"><div class="loading">…</div></div></div>
+      <div class="card"><h2>En çok takip edilen mekânlar</h2>
+        ${venues().slice().sort((a, b) => (b.followerCount || 0) - (a.followerCount || 0)).slice(0, 8).map((v) => `<div class="row" style="align-items:center;padding:6px 0;border-bottom:1px solid var(--line);cursor:pointer" data-v="${v.id}"><div class="grow"><b>${esc(v.name)}</b> <span class="muted">${esc(v.province || "")}</span></div><span class="muted">${v.followerCount || 0} takipçi · ${v.checkInTotal || 0} check-in</span></div>`).join("") || `<div class="muted">Henüz mekân yok.</div>`}
+      </div>
+    </div>`;
+  m.querySelectorAll("[data-go]").forEach((b) => (b.onclick = () => go(b.dataset.go)));
+  m.querySelectorAll(".stat[data-go2]").forEach((b) => (b.onclick = () => go(b.dataset.go2)));
+  m.querySelectorAll("[data-v]").forEach((r) => (r.onclick = () => openVenue(r.dataset.v)));
+  const cnt = async (q) => { try { return (await getCountFromServer(q)).data().count; } catch { return "—"; } };
+  const set = (id, v) => { const e = $("#" + id + " .v"); if (e) e.textContent = typeof v === "number" ? v.toLocaleString("tr-TR") : v; };
+  const now = Date.now();
+  cnt(collection(db, "users")).then((v) => set("cUsers", v));
+  cnt(query(collection(db, "users"), where("joinDate", ">=", Timestamp.fromMillis(now - 7 * 864e5)))).then((v) => set("cNew", v));
+  cnt(query(collection(db, "users"), where("lastActiveAt", ">=", Timestamp.fromMillis(now - 864e5)))).then((v) => set("cActive", v));
+  cnt(collection(db, "creators")).then((v) => set("cCreators", v));
+  cnt(query(collection(db, "moments"), where("timestamp", ">=", Timestamp.fromMillis(now - 864e5)))).then((v) => set("cMoments", v));
+  // grafik: son 14 gün
+  (async () => {
+    const days = [];
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    for (let i = 13; i >= 0; i--) { const a = new Date(start); a.setDate(a.getDate() - i); const b = new Date(a); b.setDate(b.getDate() + 1); days.push([a, b]); }
+    const vals = await Promise.all(days.map(([a, b]) => cnt(query(collection(db, "users"), where("joinDate", ">=", Timestamp.fromDate(a)), where("joinDate", "<", Timestamp.fromDate(b))))));
+    const nums = vals.map((v) => (typeof v === "number" ? v : 0));
+    const max = Math.max(1, ...nums);
+    const c = $("#chart"); if (!c) return;
+    c.innerHTML = days.map(([a], i) => `<div class="bar" title="${a.toLocaleDateString("tr-TR")}: ${nums[i]}"><em>${nums[i] || ""}</em><i style="height:${(nums[i] / max) * 80}%"></i><span>${a.getDate()}</span></div>`).join("");
+  })();
+  // son kayıtlar
+  (async () => {
+    const s = await getDocs(query(collection(db, "users"), orderBy("joinDate", "desc"), limit(8)));
+    const box = $("#lastUsers"); if (!box) return;
+    const us = docs(s); us.forEach((u) => (userCache[u.id] = u));
+    box.innerHTML = us.map((u) => `<div class="row" style="align-items:center;padding:6px 0;border-bottom:1px solid var(--line);cursor:pointer" data-u="${u.id}">${avatar(u)}<div class="grow"><b>@${esc(u.username)}</b></div><span class="muted">${ago(u.joinDate)}</span></div>`).join("") || `<div class="muted">Yok.</div>`;
+    box.querySelectorAll("[data-u]").forEach((r) => (r.onclick = () => openUser(r.dataset.u)));
+  })();
+}
+function statBox(l, v, s = "", cls = "", goTo = "", id = "") {
+  return `<div class="stat ${cls} ${goTo ? "link" : ""}" ${goTo ? `data-go2="${goTo}"` : ""} ${id ? `id="${id}"` : ""}><div class="l">${l}</div><div class="v">${typeof v === "number" ? v.toLocaleString("tr-TR") : v}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`;
+}
+
+// ================= MEKÂN BAŞVURULARI =================
+function viewClaims(m) {
+  if (!S.venueClaims.length) return empty(m, "Bekleyen mekân başvurusu yok. 🎉");
+  for (const c of S.venueClaims) {
+    const d = card(m, `
+      <div class="row"><div class="grow">
+        <div class="title">${esc(c.venueName)} <span class="chip p">${esc(ROLE_TR[c.role] || c.role)}</span> ${c.venueId ? `<span class="chip">Noct'ta kayıtlı yer</span>` : `<span class="chip warn">Yeni mekân açılacak</span>`}</div>
+        <div class="muted">${ago(c.createdAt)}</div>
+        <div class="kv">
+          <b>Başvuran</b><span>${esc(c.fullName)} · ${uname(c.userId)}</span>
+          <b>Telefon</b><span>${c.phone ? `<a href="tel:${esc(c.phone)}">${esc(c.phone)}</a>` : "—"}</span>
+          <b>Tür</b><span>${esc(c.venueType || "—")}</span>
+          <b>Adres</b><span>${esc(c.venueAddress || "—")} ${mapLink(c.lat, c.lon)}</span>
+          ${c.note ? `<b>Not</b><span>${esc(c.note)}</span>` : ""}
+        </div></div></div>
       <div class="btns"><button class="b ok" data-a="ok">Onayla</button><button class="b bad" data-a="no">Reddet</button></div>`);
-    d.querySelector('[data-a="ok"]').onclick = (e) => guard(e.target, async () => { await approveClaim(c); toast("Onaylandı: " + c.venueName); });
-    d.querySelector('[data-a="no"]').onclick = (e) => {
-      const note = prompt("Red sebebi (başvurana gösterilir, boş bırakılabilir):", "");
-      if (note === null) return;
+    $('[data-a="ok"]', d).onclick = (e) => guard(e.target, async () => { await approveClaim(c); toast("Onaylandı: " + c.venueName); });
+    $('[data-a="no"]', d).onclick = (e) => {
+      const note = prompt("Red sebebi (başvurana gösterilir, boş bırakılabilir):", ""); if (note === null) return;
       guard(e.target, async () => {
         await updateDoc(doc(db, "venueClaims", c.id), { status: "rejected", adminNote: note.trim().slice(0, 200), reviewedAt: serverTimestamp() });
         S.venueClaims = S.venueClaims.filter((x) => x.id !== c.id); render();
@@ -263,6 +493,7 @@ async function approveClaim(c) {
     if (role !== "owner") { d.team = { [c.userId]: role }; d.teamIds = [c.userId]; }
     const a = await areaOf(c.lat, c.lon); if (a) Object.assign(d, a);
     await setDoc(doc(db, "businesses", id), d);
+    S.biz.push(d);
     venueId = id;
   } else {
     const ref = doc(db, "businesses", venueId);
@@ -271,9 +502,7 @@ async function approveClaim(c) {
     const data = { ["teamInvites." + c.userId]: deleteField(), invitedIds: arrayRemove(c.userId) };
     if (role === "owner" && (!existingOwner || existingOwner === c.userId)) {
       data.ownerId = c.userId; data["team." + c.userId] = deleteField(); data.teamIds = arrayRemove(c.userId);
-    } else {
-      data["team." + c.userId] = role; data.teamIds = arrayUnion(c.userId);
-    }
+    } else { data["team." + c.userId] = role; data.teamIds = arrayUnion(c.userId); }
     await updateDoc(ref, data);
   }
   await updateDoc(doc(db, "venueClaims", c.id), { status: "approved", venueId, reviewedAt: serverTimestamp() });
@@ -281,19 +510,18 @@ async function approveClaim(c) {
   notify("claimResult", { col: "venueClaims", id: c.id });
 }
 
-// ---------- SANATÇI BAŞVURULARI ----------
-function viewCreators(el) {
-  el.insertAdjacentHTML("beforeend", `<h2>Sanatçı başvuruları</h2>`);
-  if (!S.creatorClaims.length) return empty(el, "Bekleyen başvuru yok.");
+// ================= SANATÇI BAŞVURULARI =================
+function viewCreatorClaims(m) {
+  if (!S.creatorClaims.length) return empty(m, "Bekleyen sanatçı başvurusu yok. 🎉");
   for (const c of S.creatorClaims) {
     const ig = String(c.instagram || "").replace("@", "").trim();
     const igUrl = ig ? (ig.startsWith("http") ? ig : "https://instagram.com/" + ig) : "";
-    const d = card(el, `
+    const d = card(m, `
       <div class="title">${esc(c.name)} <span class="chip p">${esc(c.kind)}</span></div>
-      <div class="muted">@${esc(c.username)} · ${fmt(c.createdAt)}</div>
+      <div class="muted">${uname(c.userId)} · ${ago(c.createdAt)}</div>
       <div class="kv">
         <b>Instagram</b><span>${igUrl ? `<a target="_blank" rel="noopener" href="${esc(igUrl)}">${esc(c.instagram)}</a>` : "—"}</span>
-        <b>Doğrulama kodu</b><span><b style="color:var(--text)">${esc(c.code)}</b> <span class="muted">(Instagram biyografisinde ya da DM'de olmalı)</span></span>
+        <b>Doğrulama kodu</b><span><b style="color:var(--text);font-size:15px">${esc(c.code)}</b> <span class="muted">· Instagram biyografisinde ya da DM'de olmalı</span></span>
         ${c.city ? `<b>Şehir</b><span>${esc(c.city)}</span>` : ""}
         ${(c.genres || []).length ? `<b>Türler</b><span>${c.genres.map((g) => `<span class="chip">${esc(g)}</span>`).join("")}</span>` : ""}
         ${c.musicLink ? `<b>Müzik</b><span><a target="_blank" rel="noopener" href="${esc(c.musicLink)}">${esc(c.musicLink)}</a></span>` : ""}
@@ -302,10 +530,9 @@ function viewCreators(el) {
         ${c.note ? `<b>Not</b><span>${esc(c.note)}</span>` : ""}
       </div>
       <div class="btns"><button class="b ok" data-a="ok">Onayla</button><button class="b bad" data-a="no">Reddet</button></div>`);
-    d.querySelector('[data-a="ok"]').onclick = (e) => guard(e.target, async () => { await approveCreator(c); toast("Onaylandı: " + c.name); });
-    d.querySelector('[data-a="no"]').onclick = (e) => {
-      const r = prompt("Red sebebi (başvurana gösterilir, boş bırakılabilir):", "");
-      if (r === null) return;
+    $('[data-a="ok"]', d).onclick = (e) => guard(e.target, async () => { await approveCreator(c); toast("Onaylandı: " + c.name); });
+    $('[data-a="no"]', d).onclick = (e) => {
+      const r = prompt("Red sebebi (başvurana gösterilir, boş bırakılabilir):", ""); if (r === null) return;
       guard(e.target, async () => {
         const data = { status: "rejected" }; if (r.trim()) data.rejectReason = r.trim().slice(0, 200);
         await updateDoc(doc(db, "creatorClaims", c.id), data);
@@ -326,38 +553,33 @@ async function approveCreator(c) {
   if (u && u.profileImgBase64) cr.img = u.profileImgBase64;
   await setDoc(doc(db, "creators", c.userId), cr);
   await updateDoc(doc(db, "creatorClaims", c.id), { status: "approved", creatorId: c.userId });
-  S.creatorClaims = S.creatorClaims.filter((x) => x.id !== c.id); render();
+  S.creatorClaims = S.creatorClaims.filter((x) => x.id !== c.id); S.creators = null; render();
   notify("claimResult", { col: "creatorClaims", id: c.id });
 }
 
-// ---------- KAMUYA AÇIK ALAN ETKİNLİK ÖNERİLERİ ----------
-function viewGigs(el) {
-  el.insertAdjacentHTML("beforeend", `<h2>Kamuya açık alanlara etkinlik önerileri</h2><p class="muted">Sahibi olmayan yerlere (stadyum, meydan, park…) gelen öneriler. Sahibi olan yerlerin önerilerine kendi ekipleri bakar.</p>`);
-  if (!S.gigs.length) return empty(el, "Bekleyen öneri yok.");
+// ================= ETKİNLİK ÖNERİLERİ =================
+function viewGigs(m) {
+  m.insertAdjacentHTML("beforeend", `<p class="muted" style="margin-top:0">Sahibi olmayan kamuya açık alanlara (stadyum, meydan, park…) gelen öneriler. Sahibi olan yerlerin önerilerine kendi ekipleri bakar.</p>`);
+  if (!S.gigs.length) return empty(m, "Bekleyen etkinlik önerisi yok.");
   for (const g of S.gigs) {
-    const d = card(el, `
-      <div class="row">
-        ${img(g.posterBase64)}
+    const d = card(m, `
+      <div class="row">${img(g.posterBase64)}
         <div class="grow">
           <div class="title">${esc(g.title)} ${g.changeOf ? `<span class="chip p">Değişiklik isteği</span>` : ""}</div>
-          <div class="muted">${esc(g.venueName)} · ${esc(g.creatorName)}</div>
+          <div class="muted">${esc(g.venueName)} · ${esc(g.creatorName)} (${uname(g.ownerId)})</div>
           <div class="kv">
-            <b>Başlangıç</b><span>${fmt(g.startTime)}</span>
-            <b>Bitiş</b><span>${fmt(g.endTime)}</span>
+            <b>Başlangıç</b><span>${fmt(g.startTime)}</span><b>Bitiş</b><span>${fmt(g.endTime)}</span>
             ${g.category ? `<b>Tür</b><span>${esc(g.category)}</span>` : ""}
             ${(g.genres || []).length ? `<b>Müzik</b><span>${g.genres.map((x) => `<span class="chip">${esc(x)}</span>`).join("")}</span>` : ""}
             <b>Giriş</b><span>${g.entryType === "free" ? "Ücretsiz" : g.entryType === "paid" ? "Ücretli " + esc(g.priceText || "") : "—"}</span>
             ${g.ticketURL ? `<b>Bilet</b><span><a target="_blank" rel="noopener" href="${esc(g.ticketURL)}">${esc(g.ticketURL)}</a></span>` : ""}
             ${g.desc ? `<b>Açıklama</b><span>${esc(g.desc)}</span>` : ""}
-            <b>İzin belgesi</b><span>${g.permitBase64 ? img(g.permitBase64) : `<span style="color:var(--warn)">Yüklenmemiş</span>`} ${esc(g.permitNote || "")}</span>
-          </div>
-        </div>
-      </div>
+            <b>İzin belgesi</b><span>${g.permitBase64 ? img(g.permitBase64) : `<span class="chip warn">Yüklenmemiş</span>`} ${esc(g.permitNote || "")}</span>
+          </div></div></div>
       <div class="btns"><button class="b ok" data-a="ok">Onayla ve yayınla</button><button class="b bad" data-a="no">Reddet</button></div>`);
-    d.querySelector('[data-a="ok"]').onclick = (e) => guard(e.target, async () => { await approveGig(g); toast("Yayınlandı: " + g.title); });
-    d.querySelector('[data-a="no"]').onclick = (e) => {
-      const r = prompt("Red sebebi (önerene gösterilir, boş bırakılabilir):", "");
-      if (r === null) return;
+    $('[data-a="ok"]', d).onclick = (e) => guard(e.target, async () => { await approveGig(g); toast("Yayınlandı: " + g.title); });
+    $('[data-a="no"]', d).onclick = (e) => {
+      const r = prompt("Red sebebi (önerene gösterilir, boş bırakılabilir):", ""); if (r === null) return;
       guard(e.target, async () => {
         const data = { status: "rejected", decidedAt: serverTimestamp() }; if (r.trim()) data.rejectReason = r.trim().slice(0, 200);
         await updateDoc(doc(db, "businesses", g.venueId, "gigRequests", g.id), data);
@@ -379,85 +601,32 @@ async function approveGig(g) {
   };
   let eventId;
   const i = g.changeOf ? events.findIndex((e) => String(e.id).toUpperCase() === String(g.changeOf).toUpperCase()) : -1;
-  if (i >= 0) {
-    const ev = { ...events[i] }; fill(ev); eventId = ev.id; events[i] = ev;
-  } else {
+  if (i >= 0) { const ev = { ...events[i] }; fill(ev); eventId = ev.id; events[i] = ev; }
+  else {
     eventId = uuid();
     const ev = { id: eventId, isRecurring: false, lineup: g.creatorName, creatorId: g.creatorId, creatorName: g.creatorName };
     fill(ev); events.push(ev);
   }
-  // Afiş ayrı dokümanda durur (uygulamadaki gibi)
   if (g.posterBase64) {
     await setDoc(doc(db, "businesses", g.venueId, "posters", eventId), { img: g.posterBase64 });
     const ev = events.find((e) => e.id === eventId); delete ev.posterBase64; ev.hasPoster = true;
   }
   await updateDoc(ref, { events });
+  const b = S.biz.find((x) => x.id === g.venueId); if (b) b.events = events;
   await updateDoc(doc(db, "businesses", g.venueId, "gigRequests", g.id), { status: "approved", decidedAt: serverTimestamp(), eventId });
   S.gigs = S.gigs.filter((x) => x.id !== g.id); render();
   notify("gigStatus", { venueId: g.venueId, gigId: g.id });
 }
 
-// ---------- ŞİKÂYETLER ----------
-function viewReports(el) {
-  el.insertAdjacentHTML("beforeend", `<h2>Şikâyetler</h2>`);
-  if (!S.reports.length) return empty(el, "Açık şikâyet yok.");
-  for (const r of S.reports) {
-    const d = card(el, `
-      <div class="title">${esc(r.reason || "Şikâyet")}</div>
-      <div class="muted">${fmt(r.createdAt)}</div>
-      <div class="kv">
-        <b>Şikâyet edilen</b><span data-u="${esc(r.targetUserId)}">…</span>
-        <b>Şikâyet eden</b><span data-u="${esc(r.reporterId)}">…</span>
-        ${r.details ? `<b>Ayrıntı</b><span>${esc(r.details)}</span>` : ""}
-        ${r.messageText ? `<b>Mesaj</b><span>“${esc(r.messageText)}”</span>` : ""}
-      </div>
-      <div class="btns"><button class="b" data-a="ok">Kapat (sorun yok)</button><button class="b bad" data-a="ban">Hesabı askıya al</button></div>`);
-    d.querySelectorAll("[data-u]").forEach(async (s) => { const u = await userOf(s.dataset.u); s.textContent = u ? "@" + (u.username || "?") : s.dataset.u || "—"; });
-    const close = async () => { await updateDoc(doc(db, "reports", r.id), { status: "resolved" }); S.reports = S.reports.filter((x) => x.id !== r.id); render(); };
-    d.querySelector('[data-a="ok"]').onclick = (e) => guard(e.target, async () => { await close(); toast("Kapatıldı"); });
-    d.querySelector('[data-a="ban"]').onclick = (e) => {
-      const reason = prompt("Askıya alma sebebi (kullanıcıya gösterilir):", r.reason || "");
-      if (reason === null) return;
-      guard(e.target, async () => {
-        const u = await userOf(r.targetUserId);
-        await setDoc(doc(db, "banned", r.targetUserId), { uid: r.targetUserId, username: (u && u.username) || "", reason: reason.trim().slice(0, 200), createdAt: serverTimestamp() });
-        await close();
-        S.banned.unshift({ id: r.targetUserId, uid: r.targetUserId, username: (u && u.username) || "", reason, createdAt: Timestamp.now() });
-        render(); toast("Hesap askıya alındı");
-      });
-    };
-  }
-}
-function viewBanned(el) {
-  el.insertAdjacentHTML("beforeend", `<h2>Askıya alınan hesaplar</h2>`);
-  if (!S.banned.length) return empty(el, "Askıda hesap yok.");
-  for (const b of S.banned) {
-    const d = card(el, `<div class="row"><div class="grow"><div class="title">@${esc(b.username || b.id)}</div>
-      <div class="muted">${esc(b.reason || "")} · ${fmt(b.createdAt)}</div></div>
-      <button class="b" data-a="un">Askıyı kaldır</button></div>`);
-    d.querySelector('[data-a="un"]').onclick = (e) => {
-      if (!confirm("@" + (b.username || b.id) + " hesabının askısı kaldırılsın mı?")) return;
-      guard(e.target, async () => { await deleteDoc(doc(db, "banned", b.id)); S.banned = S.banned.filter((x) => x.id !== b.id); render(); toast("Askı kaldırıldı"); });
-    };
-  }
-}
-
-// ---------- ÖNE ÇIKARMA ----------
-const untilTs = (days) => Timestamp.fromMillis(Date.now() + days * 864e5);
-async function setFeatured(kind, ids, days) {
-  const v = days ? untilTs(days) : deleteField();
-  if (kind === "event") await updateDoc(doc(db, "businesses", ids.venueId), { ["featuredEvents." + ids.eventId]: v });
-  else if (kind === "venue") await updateDoc(doc(db, "businesses", ids.venueId), { featuredUntil: v });
-  else await updateDoc(doc(db, "creators", ids.creatorId), { featuredUntil: v });
-}
-function viewFeatured(el) {
-  el.insertAdjacentHTML("beforeend", `<h2>Öne çıkarma talepleri</h2>`);
-  if (!S.featureReqs.length) empty(el, "Bekleyen talep yok.");
+// ================= ÖNE ÇIKARMA =================
+function viewFeatured(m) {
+  m.insertAdjacentHTML("beforeend", `<h3 style="margin-top:0">Talepler</h3>`);
+  if (!S.featureReqs.length) empty(m, "Bekleyen öne çıkarma talebi yok.");
   for (const r of S.featureReqs) {
-    const d = card(el, `
-      <div class="title">${esc(r.title)} <span class="chip p">${esc(KIND_TR[r.kind] || r.kind)}</span></div>
-      <div class="muted">${esc(r.requesterName)} · ${fmt(r.createdAt)}</div>
-      <div class="kv"><b>Süre</b><span>${Number(r.days) || 1} gün</span>${r.note ? `<b>Not</b><span>${esc(r.note)}</span>` : ""}</div>
+    const d = card(m, `
+      <div class="row"><div class="grow"><div class="title">${esc(r.title)} <span class="chip p">${esc(KIND_TR[r.kind] || r.kind)}</span></div>
+      <div class="muted">${esc(r.requesterName)} (${uname(r.requesterId)}) · ${ago(r.createdAt)}</div>
+      <div class="kv"><b>Süre</b><span>${Number(r.days) || 1} gün</span>${r.note ? `<b>Not</b><span>${esc(r.note)}</span>` : ""}</div></div></div>
       <div class="btns"><button class="b ok" data-a="ok">Onayla (${Number(r.days) || 1} gün)</button><button class="b bad" data-a="no">Reddet</button></div>`);
     const decide = (approve) => async () => {
       if (approve) await setFeatured(r.kind, r, Number(r.days) || 1);
@@ -465,123 +634,378 @@ function viewFeatured(el) {
       S.featureReqs = S.featureReqs.filter((x) => x.id !== r.id); render();
       notify("featureResult", { id: r.id }); toast(approve ? "Öne çıkarıldı" : "Reddedildi");
     };
-    d.querySelector('[data-a="ok"]').onclick = (e) => guard(e.target, decide(true));
-    d.querySelector('[data-a="no"]').onclick = (e) => guard(e.target, decide(false));
+    $('[data-a="ok"]', d).onclick = (e) => guard(e.target, decide(true));
+    $('[data-a="no"]', d).onclick = (e) => guard(e.target, decide(false));
   }
-
-  el.insertAdjacentHTML("beforeend", `<h3>Şu an öne çıkanlar</h3><div id="activeF"><div class="muted">Yükleniyor…</div></div>
-    <h3>Elle öne çıkar / kaldır</h3>
-    <div class="card"><div class="grid2">
-      <div><label>Mekân adı (büyük-küçük harf önemli, başını yazman yeter)</label><input id="qv" placeholder="ör. Zorlu"></div>
-      <div><label>Sanatçı adı</label><input id="qc" placeholder="ör. DJ"></div>
-    </div><div id="searchRes"></div></div>`);
-  loadActiveFeatured();
-  let h;
-  const run = () => { clearTimeout(h); h = setTimeout(() => guard(null, searchTargets), 350); };
-  $("#qv").oninput = run; $("#qc").oninput = run;
-}
-async function loadActiveFeatured() {
-  const box = $("#activeF"); if (!box) return;
-  const now = Timestamp.now();
-  const [vs, cs, ev] = await Promise.all([
-    getDocs(query(collection(db, "businesses"), where("featuredUntil", ">", now))),
-    getDocs(query(collection(db, "creators"), where("featuredUntil", ">", now))),
-    getDocs(query(collection(db, "featureRequests"), where("status", "==", "approved"), where("kind", "==", "event"), limit(60)))
-  ]);
-  const rows = [];
-  docs(vs).forEach((b) => rows.push({ kind: "venue", title: b.name, left: daysLeft(b.featuredUntil), ids: { venueId: b.id } }));
-  docs(cs).forEach((c) => rows.push({ kind: "artist", title: c.name, left: daysLeft(c.featuredUntil), ids: { creatorId: c.id } }));
-  const seen = new Set();
-  for (const r of docs(ev)) {
-    const k = r.venueId + "|" + r.eventId; if (seen.has(k) || !r.venueId || !r.eventId) continue; seen.add(k);
-    const b = await getDoc(doc(db, "businesses", r.venueId)).catch(() => null);
-    const t = b && b.exists() && (b.data().featuredEvents || {})[r.eventId];
-    if (t && toDate(t) > new Date()) rows.push({ kind: "event", title: r.title, left: daysLeft(t), ids: { venueId: r.venueId, eventId: r.eventId } });
-  }
-  box.innerHTML = "";
-  if (!rows.length) return (box.innerHTML = `<div class="muted">Şu an öne çıkan yok.</div>`);
-  for (const r of rows) {
-    const d = card(box, `<div class="row"><div class="grow"><div class="title">${esc(r.title)} <span class="chip p">${KIND_TR[r.kind]}</span></div>
-      <div class="muted">${r.left} gün kaldı</div></div><button class="b bad" data-a="rm">Kaldır</button></div>`, "feat");
-    d.querySelector('[data-a="rm"]').onclick = (e) => {
-      if (!confirm("“" + r.title + "” öne çıkarmadan kaldırılsın mı?")) return;
-      guard(e.target, async () => { await setFeatured(r.kind, r.ids, null); d.remove(); toast("Kaldırıldı"); });
-    };
-  }
-}
-async function searchTargets() {
-  const out = $("#searchRes"); if (!out) return;
-  const qv = $("#qv").value.trim(), qc = $("#qc").value.trim();
-  const byName = (col, q) => getDocs(query(collection(db, col), where("name", ">=", q), where("name", "<=", q + ""), limit(12)));
-  const [vs, cs] = await Promise.all([qv.length >= 2 ? byName("businesses", qv) : null, qc.length >= 2 ? byName("creators", qc) : null]);
-  out.innerHTML = "";
-  const now = new Date();
-  for (const b of vs ? docs(vs) : []) {
-    const on = toDate(b.featuredUntil) > now;
-    const d = card(out, `<div class="row"><div class="grow"><div class="title">${esc(b.name)} <span class="chip">${esc(b.type)}</span></div>
-      <div class="muted">${esc(b.province || "")} ${on ? `· öne çıkan, ${daysLeft(b.featuredUntil)} gün` : ""}</div></div>
-      <select data-a="d" style="width:auto"><option>3</option><option selected>7</option><option>14</option><option>30</option></select>
-      <button class="b acc" data-a="on">Öne çıkar</button>${on ? `<button class="b bad" data-a="off">Kaldır</button>` : ""}</div>`, on ? "feat" : "");
-    d.querySelector('[data-a="on"]').onclick = (e) => guard(e.target, async () => { await setFeatured("venue", { venueId: b.id }, Number(d.querySelector('[data-a="d"]').value)); toast("Öne çıkarıldı"); searchTargets(); loadActiveFeatured(); });
-    const off = d.querySelector('[data-a="off"]'); if (off) off.onclick = (e) => guard(e.target, async () => { await setFeatured("venue", { venueId: b.id }, null); toast("Kaldırıldı"); searchTargets(); loadActiveFeatured(); });
-  }
-  for (const c of cs ? docs(cs) : []) {
-    const on = toDate(c.featuredUntil) > now;
-    const d = card(out, `<div class="row"><div class="grow"><div class="title">${esc(c.name)} <span class="chip">${esc(c.kind)}</span> ${c.verified ? `<span class="chip p">Onaylı</span>` : ""}</div>
-      <div class="muted">${esc(c.city || "")} ${on ? `· öne çıkan, ${daysLeft(c.featuredUntil)} gün` : ""}</div></div>
-      <select data-a="d" style="width:auto"><option>3</option><option selected>7</option><option>14</option><option>30</option></select>
-      <button class="b acc" data-a="on">Öne çıkar</button>${on ? `<button class="b bad" data-a="off">Kaldır</button>` : ""}
-      <button class="b" data-a="ver">${c.verified ? "Onay rozetini kaldır" : "Onay rozeti ver"}</button></div>`, on ? "feat" : "");
-    d.querySelector('[data-a="on"]').onclick = (e) => guard(e.target, async () => { await setFeatured("artist", { creatorId: c.id }, Number(d.querySelector('[data-a="d"]').value)); toast("Öne çıkarıldı"); searchTargets(); loadActiveFeatured(); });
-    const off = d.querySelector('[data-a="off"]'); if (off) off.onclick = (e) => guard(e.target, async () => { await setFeatured("artist", { creatorId: c.id }, null); toast("Kaldırıldı"); searchTargets(); loadActiveFeatured(); });
-    d.querySelector('[data-a="ver"]').onclick = (e) => guard(e.target, async () => { await updateDoc(doc(db, "creators", c.id), { verified: !c.verified }); toast("Güncellendi"); searchTargets(); });
-  }
-  if ((qv.length >= 2 || qc.length >= 2) && !out.children.length) out.innerHTML = `<div class="muted" style="margin-top:10px">Sonuç yok.</div>`;
-}
-
-// ---------- MEKÂNLAR (işletmeler) ----------
-async function viewVenues(el) {
-  el.insertAdjacentHTML("beforeend", `<h2>Mekânlar</h2><p class="muted">Noct'a kayıtlı işletmeler (kamuya açık alanlar hariç). Deneme mekânlarını buradan silebilirsin.</p>
-    <input id="vq" placeholder="Mekân ya da il ara…" style="margin:6px 0 12px"><div id="vlist"><div class="empty">Yükleniyor…</div></div>`);
-  if (!S.venues) {
-    const s = await getDocs(collection(db, "businesses"));
-    S.venues = docs(s).filter((b) => !b.isPublic).sort((a, b) => String(a.name).localeCompare(String(b.name), "tr"));
-  }
-  const draw = async () => {
-    const list = $("#vlist"); if (!list) return;
-    const q = $("#vq").value.trim().toLocaleLowerCase("tr");
-    const items = S.venues.filter((v) => !q || String(v.name).toLocaleLowerCase("tr").includes(q) || String(v.province || "").toLocaleLowerCase("tr").includes(q));
-    list.innerHTML = items.length ? "" : `<div class="empty">Mekân yok.</div>`;
-    for (const v of items.slice(0, 150)) {
-      const team = Object.keys(v.team || {}).length;
-      const d = card(list, `<div class="row">${img(v.logoBase64)}<div class="grow">
-          <div class="title">${esc(v.name)} <span class="chip">${esc(v.type || "")}</span></div>
-          <div class="muted">${esc([v.district, v.province, v.country].filter(Boolean).join(", "))} · ${(v.events || []).length} etkinlik · ${v.followerCount || 0} takipçi ${mapLink(v.coordinateLat, v.coordinateLon)}</div>
-          <div class="muted">Sahip: <span data-u="${esc(v.ownerId)}">${v.ownerId ? "…" : "yok"}</span>${team ? ` · ekip ${team} kişi` : ""}</div>
-        </div><button class="b bad" data-a="del">Sil</button></div>`);
-      if (v.ownerId) userOf(v.ownerId).then((u) => { const s = d.querySelector("[data-u]"); if (s) s.textContent = u ? "@" + (u.username || "?") : "hesap yok"; });
-      d.querySelector('[data-a="del"]').onclick = (e) => {
-        if (!confirm("“" + v.name + "” kalıcı olarak silinsin mi?\nEtkinlikleri, afişleri ve fotoğrafları da silinir. Geri alınamaz.")) return;
-        guard(e.target, async () => {
-          for (const sub of ["photos", "posters", "gigRequests", "announcements", "stats"]) {
-            const s = await getDocs(collection(db, "businesses", v.id, sub)).catch(() => null);
-            if (s) await Promise.all(s.docs.map((x) => deleteDoc(x.ref).catch(() => {})));
-          }
-          await deleteDoc(doc(db, "businesses", v.id));
-          S.venues = S.venues.filter((x) => x.id !== v.id); d.remove(); toast("Silindi: " + v.name);
-        });
-      };
+  m.insertAdjacentHTML("beforeend", `<h3>Şu an öne çıkanlar</h3><div id="activeF"><div class="loading">…</div></div>
+    <p class="muted">Elle öne çıkarmak için Mekânlar, Sanatçılar ya da Etkinlikler sayfasında ilgili satırı aç.</p>`);
+  (async () => {
+    await loadCreators();
+    const rows = [];
+    venues().concat(publics()).filter((b) => isFuture(b.featuredUntil)).forEach((b) => rows.push({ kind: "venue", title: b.name, left: daysLeft(b.featuredUntil), ids: { venueId: b.id } }));
+    S.creators.filter((c) => isFuture(c.featuredUntil)).forEach((c) => rows.push({ kind: "artist", title: c.name, left: daysLeft(c.featuredUntil), ids: { creatorId: c.id } }));
+    allEvents().filter((e) => e.featured).forEach((e) => rows.push({ kind: "event", title: e.title + " · " + e.venue.name, left: daysLeft(e.venue.featuredEvents[e.id]), ids: { venueId: e.venue.id, eventId: e.id } }));
+    const box = $("#activeF"); if (!box) return; box.innerHTML = "";
+    if (!rows.length) return (box.innerHTML = `<div class="muted">Şu an öne çıkan yok.</div>`);
+    for (const r of rows) {
+      const d = card(box, `<div class="row" style="align-items:center"><div class="grow"><b>${esc(r.title)}</b> <span class="chip p">${KIND_TR[r.kind]}</span></div><span class="muted">${r.left} gün kaldı</span><button class="b bad sm" data-a="rm">Kaldır</button></div>`, "feat");
+      $('[data-a="rm"]', d).onclick = (e) => { if (confirm("“" + r.title + "” öne çıkarmadan kaldırılsın mı?")) guard(e.target, async () => { await setFeatured(r.kind, r.ids, null); d.remove(); toast("Kaldırıldı"); }); };
     }
-    if (items.length > 150) list.insertAdjacentHTML("beforeend", `<div class="muted">+${items.length - 150} mekân daha — aramayı daralt.</div>`);
-  };
-  $("#vq").oninput = draw; draw();
+  })();
 }
 
-// ---------- KAMUYA AÇIK ALANLAR ----------
-function viewPlaces(el) {
-  el.insertAdjacentHTML("beforeend", `<h2>Kamuya açık alanlar <span class="muted">(${S.publicPlaces.length})</span></h2>
-    <p class="muted">Haritadaki OpenStreetMap yerleri otomatik gelir. Burada Noct'a kayıtlı olanları düzenler, siler ya da elle yeni yer eklersin.</p>
-    <div class="card"><div class="title">Yeni yer ekle</div>
+// ================= ŞİKÂYETLER =================
+function viewReports(m) {
+  if (!S.reports.length) return empty(m, "Açık şikâyet yok. 🎉");
+  for (const r of S.reports) {
+    const d = card(m, `
+      <div class="row"><div class="grow">
+      <div class="title">${esc(r.reason || "Şikâyet")}</div>
+      <div class="muted">${ago(r.createdAt)}</div>
+      <div class="kv">
+        <b>Şikâyet edilen</b><span>${uname(r.targetUserId)} ${S.bannedSet.has(r.targetUserId) ? `<span class="chip bad">Askıda</span>` : ""}</span>
+        <b>Şikâyet eden</b><span>${uname(r.reporterId)}</span>
+        ${r.details ? `<b>Ayrıntı</b><span>${esc(r.details)}</span>` : ""}
+        ${r.messageText ? `<b>Mesaj</b><span>“${esc(r.messageText)}”</span>` : ""}
+      </div></div></div>
+      <div class="btns"><button class="b" data-a="ok">Kapat (sorun yok)</button><button class="b bad" data-a="ban">Hesabı askıya al</button><button class="b" data-a="u">Profili aç</button></div>`);
+    const close = async () => { await updateDoc(doc(db, "reports", r.id), { status: "resolved" }); S.reports = S.reports.filter((x) => x.id !== r.id); };
+    $('[data-a="ok"]', d).onclick = (e) => guard(e.target, async () => { await close(); render(); toast("Kapatıldı"); });
+    $('[data-a="u"]', d).onclick = () => openUser(r.targetUserId);
+    $('[data-a="ban"]', d).onclick = (e) => guard(e.target, async () => { if (await banUser(r.targetUserId, r.reason || "")) { await close(); render(); } });
+  }
+}
+async function banUser(uid, defReason = "") {
+  const reason = prompt("Askıya alma sebebi (kullanıcıya gösterilir):", defReason); if (reason === null) return false;
+  const u = await userOf(uid);
+  await setDoc(doc(db, "banned", uid), { uid, username: (u && u.username) || "", reason: reason.trim().slice(0, 200), createdAt: serverTimestamp() });
+  S.banned.unshift({ id: uid, uid, username: (u && u.username) || "", reason, createdAt: Timestamp.now() }); S.bannedSet.add(uid);
+  toast("Hesap askıya alındı"); return true;
+}
+async function unbanUser(uid) {
+  await deleteDoc(doc(db, "banned", uid));
+  S.banned = S.banned.filter((x) => x.id !== uid); S.bannedSet.delete(uid); toast("Askı kaldırıldı");
+}
+
+// ================= KULLANICILAR =================
+function viewUsers(m) {
+  m.innerHTML = `
+    <div class="toolbar"><input id="uq" placeholder="Kullanıcı adı ara… (başını yazman yeter)"><div class="seg" id="usort"><button data-s="joinDate" class="on">En yeni</button><button data-s="lastActiveAt">Son aktif</button><button data-s="noctScore">Puan</button></div></div>
+    <div class="tblwrap"><table class="tbl"><thead><tr><th>Kullanıcı</th><th>Katıldı</th><th>Son aktif</th><th>Arkadaş</th><th>Check-in</th><th>Puan</th><th>Durum</th></tr></thead><tbody id="ub"></tbody></table></div>
+    <div class="btns" style="justify-content:center"><button class="b" id="more">Daha fazla yükle</button></div>`;
+  let sortKey = "joinDate", last = null, q = "";
+  const row = (u) => {
+    userCache[u.id] = u;
+    const tr = el(`<table><tr class="click"><td><div class="who-cell">${avatar(u)}<div><b>@${esc(u.username || "?")}</b><div class="muted" style="font-size:12px">${esc((u.interests || []).slice(0, 3).join(" · "))}</div></div></div></td>
+      <td>${fmtDay(u.joinDate)}</td><td>${ago(u.lastActiveAt || u.lastSeenAt)}</td><td>${(u.friends || []).length}</td><td>${u.checkInCount || 0}</td><td>${u.noctScore || 0}</td>
+      <td>${S.bannedSet.has(u.id) ? `<span class="chip bad">Askıda</span>` : ""}${u.isEmailVerified === false ? `<span class="chip warn">E-posta yok</span>` : ""}${u.currentVenueId ? `<span class="chip ok">Mekânda</span>` : ""}</td></tr></table>`).querySelector("tr");
+    tr.onclick = () => openUser(u.id);
+    return tr;
+  };
+  const load = async (reset) => {
+    const body = $("#ub"); if (reset) { body.innerHTML = `<tr><td colspan="7" class="loading">Yükleniyor…</td></tr>`; last = null; }
+    let qq;
+    if (q.length >= 2) qq = query(collection(db, "users"), where("usernameLower", ">=", q), where("usernameLower", "<=", q + ""), limit(30));
+    else qq = last ? query(collection(db, "users"), orderBy(sortKey, "desc"), startAfter(last), limit(40)) : query(collection(db, "users"), orderBy(sortKey, "desc"), limit(40));
+    const s = await getDocs(qq);
+    if (reset) body.innerHTML = "";
+    docs(s).forEach((u) => body.appendChild(row(u)));
+    last = s.docs[s.docs.length - 1] || last;
+    $("#more").style.display = q.length >= 2 || s.docs.length < 40 ? "none" : "";
+    if (!body.children.length) body.innerHTML = `<tr><td colspan="7" class="empty">Kullanıcı bulunamadı.</td></tr>`;
+  };
+  $("#more").onclick = (e) => guard(e.target, () => load(false));
+  let h; $("#uq").oninput = () => { clearTimeout(h); h = setTimeout(() => { q = trLower($("#uq").value.trim()); guard(null, () => load(true)); }, 350); };
+  m.querySelectorAll("#usort button").forEach((b) => (b.onclick = () => { m.querySelectorAll("#usort button").forEach((x) => x.classList.toggle("on", x === b)); sortKey = b.dataset.s; guard(null, () => load(true)); }));
+  guard(null, () => load(true));
+}
+function openUser(uid) {
+  openDrawer("Kullanıcı", async (body) => {
+    delete userCache[uid];
+    const u = await userOf(uid);
+    if (!u) { body.innerHTML = `<div class="empty">Bu hesap silinmiş.</div>`; return; }
+    const [moms, owned, cr, rep] = await Promise.all([
+      getDocs(query(collection(db, "moments"), where("userId", "==", uid), limit(30))).catch(() => null),
+      Promise.resolve(S.biz.filter((b) => b.ownerId === uid || (b.teamIds || []).includes(uid) || (b.team || {})[uid])),
+      getDoc(doc(db, "creators", uid)).catch(() => null),
+      getDocs(query(collection(db, "reports"), where("targetUserId", "==", uid), limit(30))).catch(() => null)
+    ]);
+    const banned = S.bannedSet.has(uid);
+    body.innerHTML = `
+      <div class="card"><div class="row" style="align-items:center">${avatar(u, true)}<div class="grow">
+        <div style="font-size:20px;font-weight:800">@${esc(u.username)}</div>
+        <div class="muted">Katıldı ${fmtDay(u.joinDate)} · son aktif ${ago(u.lastActiveAt || u.lastSeenAt)}</div>
+        <div>${banned ? `<span class="chip bad">Askıda</span>` : ""}${u.isEmailVerified === false ? `<span class="chip warn">E-posta doğrulanmadı</span>` : `<span class="chip ok">Doğrulanmış</span>`}${u.profilePrivate ? `<span class="chip">Gizli profil</span>` : ""}${cr && cr.exists() ? `<span class="chip p">Sanatçı</span>` : ""}</div>
+      </div></div>
+      ${u.bio ? `<p style="margin:12px 0 0">${esc(u.bio)}</p>` : ""}
+      <div class="grid3" style="margin-top:12px">
+        ${statBox("Arkadaş", (u.friends || []).length)}${statBox("Check-in", u.checkInCount || 0)}${statBox("Puan", u.noctScore || 0)}
+      </div>
+      <div class="kv">
+        ${(u.interests || []).length ? `<b>İlgi alanları</b><span>${u.interests.map((x) => `<span class="chip">${esc(x)}</span>`).join("")}</span>` : ""}
+        ${(u.areas || []).length ? `<b>Semtler</b><span>${u.areas.map((x) => `<span class="chip">${esc(x.replace("|*", "").replace("|", " · "))}</span>`).join("")}</span>` : ""}
+        <b>Takip ettiği mekân</b><span>${(u.followedVenues || []).length}</span>
+        <b>Takip ettiği sanatçı</b><span>${(u.followingCreators || []).length}</span>
+        ${u.currentVenueId ? `<b>Şu an</b><span>${esc((S.biz.find((b) => b.id === u.currentVenueId) || {}).name || "bir mekânda")}</span>` : ""}
+        <b>Kimlik</b><span style="font-family:monospace;font-size:12px">${esc(uid)}</span>
+      </div>
+      <div class="btns">${banned ? `<button class="b" data-a="unban">Askıyı kaldır</button>` : `<button class="b bad" data-a="ban">Hesabı askıya al</button>`}${cr && cr.exists() ? `<button class="b" data-a="cr">Sanatçı sayfası</button>` : ""}</div>
+      </div>
+      <h3>İşlettiği mekânlar (${owned.length})</h3>
+      <div id="uOwned">${owned.map((b) => `<div class="card" style="padding:10px 14px;cursor:pointer" data-v="${b.id}"><b>${esc(b.name)}</b> <span class="chip p">${b.ownerId === uid ? "Sahip" : esc(ROLE_TR[(b.team || {})[uid]] || "Ekip")}</span></div>`).join("") || `<div class="muted">Yok.</div>`}</div>
+      <h3>Hakkındaki şikâyetler (${rep ? rep.size : 0})</h3>
+      <div>${rep && rep.size ? docs(rep).map((r) => `<div class="card" style="padding:10px 14px"><b>${esc(r.reason)}</b> <span class="chip ${r.status === "open" ? "warn" : ""}">${r.status === "open" ? "Açık" : "Kapandı"}</span><div class="muted">${esc(r.details || r.messageText || "")} · ${ago(r.createdAt)}</div></div>`).join("") : `<div class="muted">Yok.</div>`}</div>
+      <h3>Paylaşımları (${moms ? moms.size : 0})</h3>
+      <div class="gallery" id="uMoms"></div>`;
+    $('[data-a="ban"]', body)?.addEventListener("click", (e) => guard(e.target, async () => { if (await banUser(uid)) openUser(uid); }));
+    $('[data-a="unban"]', body)?.addEventListener("click", (e) => guard(e.target, async () => { await unbanUser(uid); openUser(uid); }));
+    $('[data-a="cr"]', body)?.addEventListener("click", () => openCreator(uid));
+    body.querySelectorAll("[data-v]").forEach((r) => (r.onclick = () => openVenue(r.dataset.v)));
+    const g = $("#uMoms", body);
+    if (moms) docs(moms).sort((a, b) => (toDate(b.timestamp) || 0) - (toDate(a.timestamp) || 0)).forEach((mo) => g.appendChild(momentTile(mo)));
+    if (!g.children.length) g.outerHTML = `<div class="muted">Yok.</div>`;
+  });
+}
+
+// ================= MEKÂNLAR =================
+function viewVenues(m) {
+  m.innerHTML = `<div class="toolbar"><input id="vq" placeholder="Mekân, il ya da tür ara…"><div class="seg" id="vf"><button data-f="all" class="on">Tümü</button><button data-f="owned">Sahipli</button><button data-f="none">Sahipsiz</button><button data-f="feat">Öne çıkan</button></div><span class="muted" id="vcount"></span></div>
+    <div class="tblwrap"><table class="tbl"><thead><tr><th>Mekân</th><th>Konum</th><th>Sahip</th><th>Takipçi</th><th>Check-in</th><th>Etkinlik</th><th>Durum</th></tr></thead><tbody id="vb"></tbody></table></div>`;
+  let f = "all";
+  const draw = () => {
+    const q = trLower($("#vq").value.trim());
+    let items = venues().filter((v) => !q || trLower(v.name).includes(q) || trLower(place(v)).includes(q) || trLower(v.type).includes(q));
+    if (f === "owned") items = items.filter((v) => v.ownerId);
+    if (f === "none") items = items.filter((v) => !v.ownerId);
+    if (f === "feat") items = items.filter((v) => isFuture(v.featuredUntil));
+    $("#vcount").textContent = items.length + " mekân";
+    const body = $("#vb"); body.innerHTML = "";
+    for (const v of items.slice(0, 300)) {
+      const up = (v.events || []).filter((e) => isFuture(e.endTime || e.startTime)).length;
+      const tr = el(`<table><tr class="click"><td><div class="who-cell">${v.logoBase64 ? img(v.logoBase64, "av") : `<div class="avph">${esc(String(v.name || "?").slice(0, 1))}</div>`}<div><b>${esc(v.name)}</b><div class="muted" style="font-size:12px">${esc(v.type || "")}</div></div></div></td>
+        <td>${esc(v.province || "—")}<div class="muted" style="font-size:12px">${esc(v.district || "")}</div></td><td>${v.ownerId ? uname(v.ownerId) : `<span class="muted">yok</span>`}</td>
+        <td>${v.followerCount || 0}</td><td>${v.checkInTotal || 0}</td><td>${up}<span class="muted"> / ${(v.events || []).length}</span></td>
+        <td>${isFuture(v.featuredUntil) ? `<span class="chip p">Öne çıkan</span>` : ""}${v.heat ? `<span class="chip warn">${v.heat === 2 ? "🔥 Çok canlı" : "Canlı"}</span>` : ""}</td></tr></table>`).querySelector("tr");
+      tr.onclick = () => openVenue(v.id);
+      body.appendChild(tr);
+    }
+    fillUsers(body);
+    if (!items.length) body.innerHTML = `<tr><td colspan="7" class="empty">Mekân yok.</td></tr>`;
+  };
+  $("#vq").oninput = draw;
+  m.querySelectorAll("#vf button").forEach((b) => (b.onclick = () => { m.querySelectorAll("#vf button").forEach((x) => x.classList.toggle("on", x === b)); f = b.dataset.f; draw(); }));
+  draw();
+}
+function openVenue(id) {
+  openDrawer("Mekân", async (body) => {
+    const snap = await getDoc(doc(db, "businesses", id));
+    if (!snap.exists()) { body.innerHTML = `<div class="empty">Bu mekân silinmiş.</div>`; return; }
+    const v = { ...snap.data(), id };
+    const i = S.biz.findIndex((x) => x.id === id); if (i >= 0) S.biz[i] = v;
+    const det = v.details || {};
+    const feat = isFuture(v.featuredUntil);
+    const team = Object.entries(v.team || {});
+    const events = (v.events || []).slice().sort((a, b) => (toDate(b.startTime) || 0) - (toDate(a.startTime) || 0));
+    body.innerHTML = `
+      <div class="card ${feat ? "feat" : ""}"><div class="row" style="align-items:center">${v.logoBase64 ? img(v.logoBase64) : ""}<div class="grow">
+        <div style="font-size:20px;font-weight:800">${esc(v.name)}</div>
+        <div class="muted">${esc(v.type || "")} · ${esc(place(v))} ${mapLink(v.coordinateLat, v.coordinateLon)}</div>
+        <div>${v.isPublic ? `<span class="chip">Kamuya açık alan</span>` : ""}${feat ? `<span class="chip p">Öne çıkan · ${daysLeft(v.featuredUntil)} gün</span>` : ""}${v.osmRef ? `<span class="chip">OSM</span>` : ""}</div>
+      </div></div>
+      <div class="grid3" style="margin-top:12px">${statBox("Takipçi", v.followerCount || 0)}${statBox("Check-in", v.checkInTotal || 0)}${statBox("Görüntülenme", v.viewCount || 0)}</div>
+      <div class="kv">
+        <b>Sahip</b><span>${v.ownerId ? uname(v.ownerId) : "yok"}</span>
+        ${team.length ? `<b>Ekip</b><span>${team.map(([uid, r]) => `${uname(uid)} <span class="chip">${esc(ROLE_TR[r] || r)}</span>`).join("<br>")}</span>` : ""}
+        ${det.address ? `<b>Adres</b><span>${esc(det.address)}</span>` : ""}
+        ${det.phone ? `<b>Telefon</b><span>${esc(det.phone)}</span>` : ""}
+        ${v.instagram ? `<b>Instagram</b><span>${esc(v.instagram)}</span>` : ""}
+        ${det.website ? `<b>Web</b><span><a target="_blank" rel="noopener" href="${esc(det.website)}">${esc(det.website)}</a></span>` : ""}
+        ${(v.tags || []).length ? `<b>Etiketler</b><span>${v.tags.map((t) => `<span class="chip">${esc(t)}</span>`).join("")}</span>` : ""}
+        ${v.description || det.about ? `<b>Hakkında</b><span>${esc(det.about || v.description)}</span>` : ""}
+        <b>Bilet tıklaması</b><span>${v.ticketClicks || 0}</span>
+        <b>Kimlik</b><span style="font-family:monospace;font-size:12px">${esc(id)}</span>
+      </div>
+      <div class="btns">${daysSelect()}<button class="b acc" data-a="feat">Öne çıkar</button>${feat ? `<button class="b" data-a="unfeat">Öne çıkarmayı kaldır</button>` : ""}<button class="b bad" data-a="del">Mekânı sil</button></div>
+      </div>
+      <h3>Etkinlikler (${events.length})</h3><div id="vEv"></div>`;
+    fillUsers(body);
+    $('[data-a="feat"]', body).onclick = (e) => guard(e.target, async () => { await setFeatured("venue", { venueId: id }, Number($("[data-days]", body).value)); toast("Öne çıkarıldı"); openVenue(id); });
+    $('[data-a="unfeat"]', body)?.addEventListener("click", (e) => guard(e.target, async () => { await setFeatured("venue", { venueId: id }, null); toast("Kaldırıldı"); openVenue(id); }));
+    $('[data-a="del"]', body).onclick = (e) => {
+      if (!confirm("“" + v.name + "” kalıcı olarak silinsin mi?\nEtkinlikleri, afişleri ve fotoğrafları da silinir. Geri alınamaz.")) return;
+      guard(e.target, async () => { await deleteVenue(v); closeDrawer(); render(); toast("Silindi: " + v.name); });
+    };
+    const box = $("#vEv", body);
+    for (const ev of events) box.appendChild(eventCard({ ...ev, venue: v, featured: isFuture((v.featuredEvents || {})[ev.id]) }, () => openVenue(id)));
+    if (!events.length) box.innerHTML = `<div class="muted">Etkinlik yok.</div>`;
+  });
+}
+async function deleteVenue(v) {
+  for (const sub of ["photos", "posters", "gigRequests", "announcements", "stats", "perkClaims"]) {
+    const s = await getDocs(collection(db, "businesses", v.id, sub)).catch(() => null);
+    if (s) await Promise.all(s.docs.map((x) => deleteDoc(x.ref).catch(() => {})));
+  }
+  await deleteDoc(doc(db, "businesses", v.id));
+  S.biz = S.biz.filter((x) => x.id !== v.id);
+}
+
+// ================= ETKİNLİKLER =================
+function eventCard(e, after) {
+  const past = !isFuture(e.endTime || e.startTime);
+  const d = el(`<div class="card ${e.featured ? "feat" : ""}" style="padding:12px 14px"><div class="row">
+      <div class="grow"><div class="title">${esc(e.title)} ${e.isCancelled ? `<span class="chip bad">İptal</span>` : ""}${e.featured ? `<span class="chip p">Öne çıkan · ${daysLeft(e.venue.featuredEvents[e.id])} gün</span>` : ""}${past ? `<span class="chip">Geçmiş</span>` : ""}</div>
+      <div class="muted">${fmt(e.startTime)} · <a href="#" data-a="v">${esc(e.venue.name)}</a>${e.category ? " · " + esc(e.category) : ""}${e.lineup ? " · " + esc(e.lineup) : ""}</div>
+      <div class="muted">${e.entryType === "free" ? "Ücretsiz" : e.entryType === "paid" ? "Ücretli " + esc(e.priceText || "") : ""}${e.ticketURL ? ` · <a target="_blank" rel="noopener" href="${esc(e.ticketURL)}">Bilet</a>` : ""}</div></div>
+    </div>
+    <div class="btns">${past ? "" : daysSelect(3) + `<button class="b acc sm" data-a="f">Öne çıkar</button>`}${e.featured ? `<button class="b sm" data-a="uf">Kaldır</button>` : ""}<button class="b bad sm" data-a="del">Etkinliği sil</button></div></div>`);
+  $('[data-a="v"]', d).onclick = (x) => { x.preventDefault(); openVenue(e.venue.id); };
+  $('[data-a="f"]', d)?.addEventListener("click", (x) => guard(x.target, async () => { await setFeatured("event", { venueId: e.venue.id, eventId: e.id }, Number($("[data-days]", d).value)); toast("Öne çıkarıldı"); after(); }));
+  $('[data-a="uf"]', d)?.addEventListener("click", (x) => guard(x.target, async () => { await setFeatured("event", { venueId: e.venue.id, eventId: e.id }, null); toast("Kaldırıldı"); after(); }));
+  $('[data-a="del"]', d).onclick = (x) => {
+    if (!confirm("“" + e.title + "” etkinliği silinsin mi? Geri alınamaz.")) return;
+    guard(x.target, async () => {
+      const ref = doc(db, "businesses", e.venue.id);
+      const s = await getDoc(ref);
+      const events = (s.data().events || []).filter((y) => y.id !== e.id);
+      const data = { events };
+      if ((s.data().featuredEvents || {})[e.id]) data["featuredEvents." + e.id] = deleteField();
+      await updateDoc(ref, data);
+      await deleteDoc(doc(db, "businesses", e.venue.id, "posters", e.id)).catch(() => {});
+      const b = S.biz.find((y) => y.id === e.venue.id); if (b) b.events = events;
+      toast("Etkinlik silindi"); after();
+    });
+  };
+  return d;
+}
+function viewEvents(m) {
+  m.innerHTML = `<div class="toolbar"><input id="eq" placeholder="Etkinlik, mekân ya da şehir ara…"><div class="seg" id="ef"><button data-f="up" class="on">Yaklaşan</button><button data-f="feat">Öne çıkan</button><button data-f="past">Geçmiş</button></div><span class="muted" id="ecount"></span></div><div id="elist"></div>`;
+  let f = "up";
+  const draw = () => {
+    const q = trLower($("#eq").value.trim());
+    let items = allEvents().filter((e) => !q || trLower(e.title).includes(q) || trLower(e.venue.name).includes(q) || trLower(place(e.venue)).includes(q) || trLower(e.lineup).includes(q));
+    const up = (e) => isFuture(e.endTime || e.startTime);
+    if (f === "up") items = items.filter(up).sort((a, b) => toDate(a.startTime) - toDate(b.startTime));
+    if (f === "feat") items = items.filter((e) => e.featured);
+    if (f === "past") items = items.filter((e) => !up(e)).sort((a, b) => toDate(b.startTime) - toDate(a.startTime));
+    $("#ecount").textContent = items.length + " etkinlik";
+    const box = $("#elist"); box.innerHTML = "";
+    items.slice(0, 200).forEach((e) => box.appendChild(eventCard(e, draw)));
+    if (!items.length) box.innerHTML = `<div class="empty">Etkinlik yok.</div>`;
+  };
+  $("#eq").oninput = draw;
+  m.querySelectorAll("#ef button").forEach((b) => (b.onclick = () => { m.querySelectorAll("#ef button").forEach((x) => x.classList.toggle("on", x === b)); f = b.dataset.f; draw(); }));
+  draw();
+}
+
+// ================= SANATÇILAR =================
+function viewCreators(m) {
+  m.innerHTML = `<div class="toolbar"><input id="cq" placeholder="Sanatçı ya da şehir ara…"><div class="seg" id="cf"><button data-f="all" class="on">Tümü</button><button data-f="feat">Öne çıkan</button><button data-f="unv">Onaysız</button></div><span class="muted" id="ccount"></span></div>
+    <div class="tblwrap"><table class="tbl"><thead><tr><th>Sanatçı</th><th>Tür</th><th>Şehir</th><th>Takipçi</th><th>Durum</th></tr></thead><tbody id="cb"><tr><td colspan="5" class="loading">Yükleniyor…</td></tr></tbody></table></div>`;
+  let f = "all";
+  const draw = () => {
+    const q = trLower($("#cq").value.trim());
+    let items = S.creators.filter((c) => !q || trLower(c.name).includes(q) || trLower(c.city).includes(q));
+    if (f === "feat") items = items.filter((c) => isFuture(c.featuredUntil));
+    if (f === "unv") items = items.filter((c) => !c.verified);
+    $("#ccount").textContent = items.length + " sanatçı";
+    const body = $("#cb"); body.innerHTML = "";
+    for (const c of items) {
+      const tr = el(`<table><tr class="click"><td><div class="who-cell">${c.img ? img(c.img, "av") : `<div class="avph">${esc(String(c.name || "?").slice(0, 1))}</div>`}<b>${esc(c.name)}</b></div></td>
+        <td>${esc(c.kind || "")}</td><td>${esc(c.city || "—")}</td><td>${c.followerCount || 0}</td>
+        <td>${c.verified ? `<span class="chip ok">Onaylı</span>` : ""}${isFuture(c.featuredUntil) ? `<span class="chip p">Öne çıkan</span>` : ""}${c.heat ? `<span class="chip warn">Canlı</span>` : ""}</td></tr></table>`).querySelector("tr");
+      tr.onclick = () => openCreator(c.id);
+      body.appendChild(tr);
+    }
+    if (!items.length) body.innerHTML = `<tr><td colspan="5" class="empty">Sanatçı yok.</td></tr>`;
+  };
+  $("#cq").oninput = draw;
+  m.querySelectorAll("#cf button").forEach((b) => (b.onclick = () => { m.querySelectorAll("#cf button").forEach((x) => x.classList.toggle("on", x === b)); f = b.dataset.f; draw(); }));
+  guard(null, async () => { await loadCreators(); draw(); });
+}
+function openCreator(id) {
+  openDrawer("Sanatçı", async (body) => {
+    const s = await getDoc(doc(db, "creators", id));
+    if (!s.exists()) { body.innerHTML = `<div class="empty">Sanatçı sayfası yok.</div>`; return; }
+    const c = { ...s.data(), id };
+    if (S.creators) { const i = S.creators.findIndex((x) => x.id === id); if (i >= 0) S.creators[i] = c; }
+    const feat = isFuture(c.featuredUntil);
+    const gigs = allEvents().filter((e) => e.creatorId === id || (e.artistIds || []).includes(id));
+    body.innerHTML = `
+      <div class="card ${feat ? "feat" : ""}"><div class="row" style="align-items:center">${c.img ? img(c.img) : ""}<div class="grow">
+        <div style="font-size:20px;font-weight:800">${esc(c.name)}</div>
+        <div class="muted">${esc(c.kind || "")}${c.city ? " · " + esc(c.city) : ""} · hesap ${uname(c.ownerId)}</div>
+        <div>${c.verified ? `<span class="chip ok">Onaylı</span>` : `<span class="chip">Onaysız</span>`}${feat ? `<span class="chip p">Öne çıkan · ${daysLeft(c.featuredUntil)} gün</span>` : ""}</div>
+      </div></div>
+      <div class="grid3" style="margin-top:12px">${statBox("Takipçi", c.followerCount || 0)}${statBox("Etkinlik", gigs.length)}${statBox("Canlılık", c.heat || 0)}</div>
+      <div class="kv">
+        ${(c.genres || []).length ? `<b>Türler</b><span>${c.genres.map((g) => `<span class="chip">${esc(g)}</span>`).join("")}</span>` : ""}
+        ${c.bio ? `<b>Hakkında</b><span>${esc(c.bio)}</span>` : ""}
+        ${c.instagram ? `<b>Instagram</b><span>${esc(c.instagram)}</span>` : ""}
+        ${["spotify", "soundcloud", "youtube"].filter((k) => c[k]).map((k) => `<b>${k}</b><span><a target="_blank" rel="noopener" href="${esc(c[k])}">${esc(c[k])}</a></span>`).join("")}
+      </div>
+      <div class="btns">${daysSelect()}<button class="b acc" data-a="feat">Öne çıkar</button>${feat ? `<button class="b" data-a="unfeat">Öne çıkarmayı kaldır</button>` : ""}
+        <button class="b" data-a="ver">${c.verified ? "Onay rozetini kaldır" : "Onay rozeti ver"}</button><button class="b" data-a="u">Kullanıcı hesabı</button><button class="b bad" data-a="del">Sanatçı sayfasını sil</button></div>
+      </div>
+      <h3>Etkinlikleri (${gigs.length})</h3><div id="cEv"></div>`;
+    fillUsers(body);
+    $('[data-a="feat"]', body).onclick = (e) => guard(e.target, async () => { await setFeatured("artist", { creatorId: id }, Number($("[data-days]", body).value)); toast("Öne çıkarıldı"); openCreator(id); });
+    $('[data-a="unfeat"]', body)?.addEventListener("click", (e) => guard(e.target, async () => { await setFeatured("artist", { creatorId: id }, null); toast("Kaldırıldı"); openCreator(id); }));
+    $('[data-a="ver"]', body).onclick = (e) => guard(e.target, async () => { await updateDoc(doc(db, "creators", id), { verified: !c.verified }); toast("Güncellendi"); openCreator(id); });
+    $('[data-a="u"]', body).onclick = () => openUser(c.ownerId);
+    $('[data-a="del"]', body).onclick = (e) => {
+      if (!confirm("“" + c.name + "” sanatçı sayfası silinsin mi? Kullanıcı hesabı silinmez.")) return;
+      guard(e.target, async () => {
+        const a = await getDocs(collection(db, "creators", id, "announcements")).catch(() => null);
+        if (a) await Promise.all(a.docs.map((x) => deleteDoc(x.ref).catch(() => {})));
+        await deleteDoc(doc(db, "creators", id));
+        if (S.creators) S.creators = S.creators.filter((x) => x.id !== id);
+        closeDrawer(); render(); toast("Silindi");
+      });
+    };
+    const box = $("#cEv", body);
+    gigs.sort((a, b) => toDate(b.startTime) - toDate(a.startTime)).forEach((e) => box.appendChild(eventCard(e, () => openCreator(id))));
+    if (!gigs.length) box.innerHTML = `<div class="muted">Etkinlik yok.</div>`;
+  });
+}
+
+// ================= PAYLAŞIMLAR =================
+function momentTile(mo) {
+  const t = el(`<div class="tile">${mo.thumbBase64 || mo.imgBase64 ? `<img src="${esc(src(mo.thumbBase64 || mo.imgBase64))}" data-zoom alt="">` : `<div style="aspect-ratio:1;background:var(--soft)"></div>`}
+    <div class="tb"><div style="font-weight:600;font-size:13px">${uname(mo.userId)}</div>
+    <div class="muted" style="font-size:12px">${esc(mo.venueName || "")} · ${ago(mo.timestamp)}</div>
+    ${mo.caption ? `<div style="font-size:12.5px;margin-top:3px">${esc(mo.caption)}</div>` : ""}
+    <div class="btns" style="margin-top:6px"><span class="chip">${mo.kind === "venue" ? "Mekân paylaşımı" : "Canlı"}</span><button class="b bad sm" data-a="del">Sil</button></div></div></div>`);
+  fillUsers(t);
+  $('[data-a="del"]', t).onclick = (e) => {
+    if (!confirm("Bu paylaşım silinsin mi?")) return;
+    guard(e.target, async () => {
+      await deleteDoc(doc(db, "moments", mo.id, "full", "img")).catch(() => {});
+      await deleteDoc(doc(db, "moments", mo.id));
+      t.remove(); toast("Paylaşım silindi");
+    });
+  };
+  return t;
+}
+function viewMoments(m) {
+  m.innerHTML = `<p class="muted" style="margin-top:0">Son paylaşılan fotoğraflar. Uygunsuz olanları buradan silebilirsin.</p><div class="gallery" id="mg"></div><div class="btns" style="justify-content:center"><button class="b" id="mmore">Daha fazla yükle</button></div>`;
+  let last = null;
+  const load = async () => {
+    const s = await getDocs(last ? query(collection(db, "moments"), orderBy("timestamp", "desc"), startAfter(last), limit(40)) : query(collection(db, "moments"), orderBy("timestamp", "desc"), limit(40)));
+    const g = $("#mg"); if (!g) return;
+    docs(s).forEach((mo) => g.appendChild(momentTile(mo)));
+    last = s.docs[s.docs.length - 1] || last;
+    $("#mmore").style.display = s.docs.length < 40 ? "none" : "";
+    if (!g.children.length) g.outerHTML = `<div class="empty">Paylaşım yok.</div>`;
+  };
+  $("#mmore").onclick = (e) => guard(e.target, load);
+  guard(null, load);
+}
+
+// ================= KAMUYA AÇIK ALANLAR =================
+function viewPlaces(m) {
+  m.innerHTML = `
+    <p class="muted" style="margin-top:0">Haritadaki OpenStreetMap yerleri otomatik gelir. Burada Noct'a kayıtlı olanları düzenler, siler ya da elle yeni yer eklersin.</p>
+    <div class="card"><h2>Yeni yer ekle</h2>
       <div class="grid2">
         <div><label>Ad</label><input id="nName"></div>
         <div><label>Tür</label><select id="nType"><option value="">Türsüz</option>${PUBLIC_TYPES.map((t) => `<option>${t}</option>`).join("")}</select></div>
@@ -590,14 +1014,14 @@ function viewPlaces(el) {
       </div>
       <div class="btns"><button class="b acc" id="nAdd">Ekle</button></div>
     </div>
-    <input id="pq" placeholder="Listede ara…" style="margin:6px 0 12px"><div id="plist"></div>`);
+    <div class="toolbar"><input id="pq" placeholder="Yer ya da il ara…"><span class="muted" id="pcount"></span></div><div id="plist"></div>`;
   $("#nAdd").onclick = (e) => guard(e.target, addPlace);
   const draw = () => {
-    const q = $("#pq").value.trim().toLocaleLowerCase("tr");
+    const q = trLower($("#pq").value.trim());
+    const items = publics().filter((p) => !q || trLower(p.name).includes(q) || trLower(place(p)).includes(q));
+    $("#pcount").textContent = items.length + " yer";
     const list = $("#plist"); list.innerHTML = "";
-    const items = S.publicPlaces.filter((p) => !q || String(p.name).toLocaleLowerCase("tr").includes(q) || String(p.province || "").toLocaleLowerCase("tr").includes(q));
-    items.slice(0, 150).forEach((p) => placeCard(list, p));
-    if (items.length > 150) list.insertAdjacentHTML("beforeend", `<div class="muted">+${items.length - 150} yer daha — aramayı daralt.</div>`);
+    items.slice(0, 200).forEach((p) => placeCard(list, p));
     if (!items.length) list.innerHTML = `<div class="empty">Yer yok.</div>`;
   };
   $("#pq").oninput = draw; draw();
@@ -605,46 +1029,40 @@ function viewPlaces(el) {
 function placeCard(list, p) {
   const managed = !!p.ownerId || Object.keys(p.team || {}).length > 0;
   const d = card(list, `
-    <div class="row"><div class="grow">
-      <div class="title">${esc(p.name)} ${p.type ? `<span class="chip">${esc(p.type)}</span>` : `<span class="chip">Türsüz</span>`} ${managed ? `<span class="chip p">Sahiplenilmiş</span>` : ""} ${p.osmRef ? `<span class="chip">OSM</span>` : ""}</div>
-      <div class="muted">${esc([p.district, p.province, p.country].filter(Boolean).join(", "))} · ${esc((p.details || {}).address || "")} ${mapLink(p.coordinateLat, p.coordinateLon)}</div>
-    </div><button class="b" data-a="ed">Düzenle</button></div>
+    <div class="row" style="align-items:center"><div class="grow">
+      <div class="title">${esc(p.name)} <span class="chip">${esc(p.type || "Türsüz")}</span>${managed ? `<span class="chip p">Sahiplenilmiş</span>` : ""}${p.osmRef ? `<span class="chip">OSM</span>` : ""}${(p.events || []).length ? `<span class="chip ok">${p.events.length} etkinlik</span>` : ""}</div>
+      <div class="muted">${esc(place(p))} · ${esc((p.details || {}).address || "")} ${mapLink(p.coordinateLat, p.coordinateLon)}</div>
+    </div><button class="b sm" data-a="open">Ayrıntı</button><button class="b sm" data-a="ed">Düzenle</button></div>
     <div data-f style="display:none">
       <div class="grid2">
         <div><label>Ad</label><input data-k="name" value="${esc(p.name)}"></div>
         <div><label>Tür</label><select data-k="type"><option value="">Türsüz</option>${PUBLIC_TYPES.map((t) => `<option ${t === p.type ? "selected" : ""}>${t}</option>`).join("")}</select></div>
         <div><label>Adres</label><input data-k="addr" value="${esc((p.details || {}).address || "")}"></div>
-        <div><label>Konum (değiştirmek istersen)</label><input data-k="loc" value="${p.coordinateLat}, ${p.coordinateLon}"></div>
+        <div><label>Konum</label><input data-k="loc" value="${p.coordinateLat}, ${p.coordinateLon}"></div>
       </div>
       <div class="btns"><button class="b ok" data-a="sv">Kaydet</button><button class="b bad" data-a="del">Sil</button></div>
     </div>`);
-  const f = d.querySelector("[data-f]");
-  d.querySelector('[data-a="ed"]').onclick = () => (f.style.display = f.style.display === "none" ? "block" : "none");
-  d.querySelector('[data-a="sv"]').onclick = (e) => guard(e.target, async () => {
-    const name = f.querySelector('[data-k="name"]').value.trim();
-    if (name.length < 2) throw new Error("Ad gerekli");
-    const type = f.querySelector('[data-k="type"]').value;
-    const data = { name: name.slice(0, 80), type, tags: type ? [type] : [], "details.address": f.querySelector('[data-k="addr"]').value.trim().slice(0, 200) };
-    const [la, lo] = f.querySelector('[data-k="loc"]').value.split(",").map((x) => parseFloat(x));
+  const f = $("[data-f]", d);
+  $('[data-a="open"]', d).onclick = () => openVenue(p.id);
+  $('[data-a="ed"]', d).onclick = () => (f.style.display = f.style.display === "none" ? "block" : "none");
+  $('[data-a="sv"]', d).onclick = (e) => guard(e.target, async () => {
+    const name = $('[data-k="name"]', f).value.trim(); if (name.length < 2) throw new Error("Ad gerekli");
+    const type = $('[data-k="type"]', f).value;
+    const data = { name: name.slice(0, 80), type, tags: type ? [type] : [], "details.address": $('[data-k="addr"]', f).value.trim().slice(0, 200) };
+    const [la, lo] = $('[data-k="loc"]', f).value.split(",").map((x) => parseFloat(x));
     if (isFinite(la) && isFinite(lo) && (Math.abs(la - p.coordinateLat) > 1e-6 || Math.abs(lo - p.coordinateLon) > 1e-6)) {
       data.coordinateLat = la; data.coordinateLon = lo;
       const a = await areaOf(la, lo); if (a) Object.assign(data, a);
     }
     await updateDoc(doc(db, "businesses", p.id), data);
-    Object.assign(p, { name: data.name, type, tags: data.tags, details: { ...(p.details || {}), address: data["details.address"] } }, data.coordinateLat ? { coordinateLat: la, coordinateLon: lo } : {});
+    Object.assign(p, { name: data.name, type, tags: data.tags, details: { ...(p.details || {}), address: data["details.address"] } });
+    if (data.coordinateLat) Object.assign(p, { coordinateLat: la, coordinateLon: lo, country: data.country ?? p.country, province: data.province ?? p.province, district: data.district ?? p.district });
     toast("Kaydedildi"); render();
   });
-  d.querySelector('[data-a="del"]').onclick = (e) => {
-    if (managed) return toast("Bu yerin sahibi/ekibi var; silmeden önce sahiplikten çıkarılmalı.", 4000);
+  $('[data-a="del"]', d).onclick = (e) => {
+    if (managed) return toast("Bu yerin sahibi/ekibi var; Mekânlar'dan ya da ayrıntı sayfasından sil.", 4000);
     if (!confirm("“" + p.name + "” silinsin mi? Etkinlikleri de silinir.")) return;
-    guard(e.target, async () => {
-      for (const sub of ["posters", "photos"]) {
-        const s = await getDocs(collection(db, "businesses", p.id, sub)).catch(() => null);
-        if (s) await Promise.all(s.docs.map((x) => deleteDoc(x.ref).catch(() => {})));
-      }
-      await deleteDoc(doc(db, "businesses", p.id));
-      S.publicPlaces = S.publicPlaces.filter((x) => x.id !== p.id); toast("Silindi"); render();
-    });
+    guard(e.target, async () => { await deleteVenue(p); toast("Silindi"); render(); });
   };
 }
 async function addPlace() {
@@ -652,27 +1070,41 @@ async function addPlace() {
   const [lat, lon] = $("#nLoc").value.split(",").map((x) => parseFloat(x));
   if (name.length < 2) throw new Error("Ad gerekli");
   if (!isFinite(lat) || !isFinite(lon)) throw new Error("Konumu “enlem, boylam” biçiminde yaz");
-  const near = S.publicPlaces.find((p) => Math.hypot((p.coordinateLat - lat) * 111000, (p.coordinateLon - lon) * 111000 * Math.cos(lat * Math.PI / 180)) < 250);
+  const near = publics().find((p) => Math.hypot((p.coordinateLat - lat) * 111000, (p.coordinateLon - lon) * 111000 * Math.cos(lat * Math.PI / 180)) < 250);
   if (near && !confirm("250 m yakınında “" + near.name + "” zaten var. Yine de eklensin mi?")) return;
   let address = $("#nAddr").value.trim();
-  if (!address) {
-    try { const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=tr&lat=${lat}&lon=${lon}`); address = ((await r.json()).display_name || "").split(",").slice(0, 4).join(",").trim(); } catch {}
-  }
+  if (!address) { try { const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=tr&lat=${lat}&lon=${lon}`); address = ((await r.json()).display_name || "").split(",").slice(0, 4).join(",").trim(); } catch {} }
   const id = uuid();
   const d = newBusiness({ id, uniqueMapId: `pub_${lat.toFixed(5)}_${lon.toFixed(5)}`, name: name.slice(0, 80), type, lat, lon, address: address.slice(0, 200), tags: type ? [type] : [] });
   d.isPublic = true;
   const a = await areaOf(lat, lon); if (a) Object.assign(d, a);
   await setDoc(doc(db, "businesses", id), d);
-  S.publicPlaces.push(d); S.publicPlaces.sort((x, y) => String(x.name).localeCompare(String(y.name), "tr"));
+  S.biz.push(d); S.biz.sort((x, y) => String(x.name).localeCompare(String(y.name), "tr"));
   toast("Eklendi: " + name); render();
 }
 
-// ---------- ARAÇLAR ----------
-function viewTools(el) {
-  el.insertAdjacentHTML("beforeend", `<h2>Araçlar</h2>
-    <div class="card"><div class="title">Sunucu temizliği + canlılık hesabı</div>
+// ================= ASKIDAKİLER =================
+function viewBanned(m) {
+  if (!S.banned.length) return empty(m, "Askıda hesap yok.");
+  const wrap = el(`<div class="tblwrap"><table class="tbl"><thead><tr><th>Hesap</th><th>Sebep</th><th>Tarih</th><th></th></tr></thead><tbody></tbody></table></div>`);
+  m.appendChild(wrap);
+  const body = $("tbody", wrap);
+  for (const b of S.banned) {
+    const tr = el(`<table><tr><td><b>@${esc(b.username || b.id)}</b></td><td>${esc(b.reason || "—")}</td><td>${fmtDay(b.createdAt)}</td><td style="text-align:right"><button class="b sm" data-a="u">Profil</button> <button class="b sm" data-a="un">Askıyı kaldır</button></td></tr></table>`).querySelector("tr");
+    $('[data-a="u"]', tr).onclick = () => openUser(b.id);
+    $('[data-a="un"]', tr).onclick = (e) => { if (confirm("@" + (b.username || b.id) + " hesabının askısı kaldırılsın mı?")) guard(e.target, async () => { await unbanUser(b.id); render(); }); };
+    body.appendChild(tr);
+  }
+}
+
+// ================= ARAÇLAR =================
+function viewTools(m) {
+  m.innerHTML = `
+    <div class="card"><h2>Sunucu temizliği + canlılık hesabı</h2>
       <p class="muted">Normalde her saat ve her gece kendiliğinden çalışır. Hemen çalıştırmak için bas.</p>
-      <div class="btns"><button class="b acc" id="cl">Şimdi çalıştır</button></div><pre id="clr" style="display:none"></pre></div>`);
+      <div class="btns"><button class="b acc" id="cl">Şimdi çalıştır</button></div><pre id="clr" style="display:none"></pre></div>
+    <div class="card"><h2>Veri boyutu</h2><p class="muted">Panel ücretsiz Firebase kotasını korumak için kullanıcıları ve paylaşımları sayfa sayfa yükler. Sayılar Genel bakış'ta.</p>
+      <div class="kv"><b>Yüklü mekân kaydı</b><span>${S.biz.length}</span><b>Yüklü sanatçı</b><span>${S.creators ? S.creators.length : "—"}</span></div></div>`;
   $("#cl").onclick = (e) => guard(e.target, async () => {
     const t = await auth.currentUser.getIdToken();
     const r = await fetch(PUSH, { method: "POST", headers: { Authorization: "Bearer " + t, "Content-Type": "application/json" }, body: JSON.stringify({ type: "cleanup" }) });
