@@ -150,7 +150,7 @@ pre{white-space:pre-wrap;word-break:break-word;background:var(--soft);padding:12
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, query, where, orderBy, limit, startAfter, serverTimestamp, deleteField, arrayUnion, arrayRemove, Timestamp, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, query, where, orderBy, limit, startAfter, documentId, serverTimestamp, deleteField, arrayUnion, arrayRemove, Timestamp, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // Firebase web ayarı. Gizli bilgi değildir: güvenliği Firestore kuralları sağlar (sadece admins listesindekiler yönetebilir).
 const firebaseConfig = {
@@ -229,6 +229,14 @@ function fillUsers(root) {
     s.textContent = u ? "@" + (u.username || "?") : (s.dataset.uname ? "silinmiş hesap" : "—");
     if (u) { s.classList.add("ulink"); s.style.cursor = "pointer"; s.style.color = "var(--acc)"; s.onclick = (e) => { e.stopPropagation(); openUser(u.id); }; }
   });
+}
+async function presenceOf(ids) {
+  const out = {};
+  for (let i = 0; i < ids.length; i += 10) {
+    const chunk = ids.slice(i, i + 10); if (!chunk.length) continue;
+    try { const s = await getDocs(query(collection(db, "presence"), where(documentId(), "in", chunk))); s.docs.forEach((d) => (out[d.id] = d.data())); } catch {}
+  }
+  return out;
 }
 const uname = (uid) => `<span data-uname="${esc(uid || "")}">…</span>`;
 function newBusiness({ id, ownerId = "", uniqueMapId = "", name, type = "Venue", lat = 0, lon = 0, address = "", tags = [] }) {
@@ -426,7 +434,7 @@ async function viewOverview(m) {
   const now = Date.now();
   cnt(collection(db, "users")).then((v) => set("cUsers", v));
   cnt(query(collection(db, "users"), where("joinDate", ">=", Timestamp.fromMillis(now - 7 * 864e5)))).then((v) => set("cNew", v));
-  cnt(query(collection(db, "users"), where("lastActiveAt", ">=", Timestamp.fromMillis(now - 864e5)))).then((v) => set("cActive", v));
+  cnt(query(collection(db, "presence"), where("lastSeenAt", ">=", Timestamp.fromMillis(now - 864e5)))).then((v) => set("cActive", v));
   cnt(collection(db, "creators")).then((v) => set("cCreators", v));
   cnt(query(collection(db, "moments"), where("timestamp", ">=", Timestamp.fromMillis(now - 864e5)))).then((v) => set("cMoments", v));
   // grafik: son 14 gün
@@ -690,15 +698,15 @@ async function unbanUser(uid) {
 // ================= KULLANICILAR =================
 function viewUsers(m) {
   m.innerHTML = `
-    <div class="toolbar"><input id="uq" placeholder="Kullanıcı adı ara… (başını yazman yeter)"><div class="seg" id="usort"><button data-s="joinDate" class="on">En yeni</button><button data-s="lastActiveAt">Son aktif</button><button data-s="noctScore">Puan</button></div></div>
+    <div class="toolbar"><input id="uq" placeholder="Kullanıcı adı ara… (başını yazman yeter)"><div class="seg" id="usort"><button data-s="joinDate" class="on">En yeni</button><button data-s="noctScore">Puan</button><button data-s="checkInCount">Check-in</button></div></div>
     <div class="tblwrap"><table class="tbl"><thead><tr><th>Kullanıcı</th><th>Katıldı</th><th>Son aktif</th><th>Arkadaş</th><th>Check-in</th><th>Puan</th><th>Durum</th></tr></thead><tbody id="ub"></tbody></table></div>
     <div class="btns" style="justify-content:center"><button class="b" id="more">Daha fazla yükle</button></div>`;
   let sortKey = "joinDate", last = null, q = "";
-  const row = (u) => {
+  const row = (u, p = {}) => {
     userCache[u.id] = u;
     const tr = el(`<table><tr class="click"><td><div class="who-cell">${avatar(u)}<div><b>@${esc(u.username || "?")}</b><div class="muted" style="font-size:12px">${esc((u.interests || []).slice(0, 3).join(" · "))}</div></div></div></td>
-      <td>${fmtDay(u.joinDate)}</td><td>${ago(u.lastActiveAt || u.lastSeenAt)}</td><td>${(u.friends || []).length}</td><td>${u.checkInCount || 0}</td><td>${u.noctScore || 0}</td>
-      <td>${S.bannedSet.has(u.id) ? `<span class="chip bad">Askıda</span>` : ""}${u.isEmailVerified === false ? `<span class="chip warn">E-posta yok</span>` : ""}${u.currentVenueId ? `<span class="chip ok">Mekânda</span>` : ""}</td></tr></table>`).querySelector("tr");
+      <td>${fmtDay(u.joinDate)}</td><td>${ago(p.lastSeenAt || p.lastActiveAt)}</td><td>${(u.friends || []).length}</td><td>${u.checkInCount || 0}</td><td>${u.noctScore || 0}</td>
+      <td>${S.bannedSet.has(u.id) ? `<span class="chip bad">Askıda</span>` : ""}${u.isEmailVerified === false ? `<span class="chip warn">E-posta yok</span>` : ""}${p.currentVenueId ? `<span class="chip ok">Mekânda</span>` : ""}</td></tr></table>`).querySelector("tr");
     tr.onclick = () => openUser(u.id);
     return tr;
   };
@@ -709,7 +717,9 @@ function viewUsers(m) {
     else qq = last ? query(collection(db, "users"), orderBy(sortKey, "desc"), startAfter(last), limit(40)) : query(collection(db, "users"), orderBy(sortKey, "desc"), limit(40));
     const s = await getDocs(qq);
     if (reset) body.innerHTML = "";
-    docs(s).forEach((u) => body.appendChild(row(u)));
+    const us = docs(s);
+    const pres = await presenceOf(us.map((u) => u.id));
+    us.forEach((u) => body.appendChild(row(u, pres[u.id] || {})));
     last = s.docs[s.docs.length - 1] || last;
     $("#more").style.display = q.length >= 2 || s.docs.length < 40 ? "none" : "";
     if (!body.children.length) body.innerHTML = `<tr><td colspan="7" class="empty">Kullanıcı bulunamadı.</td></tr>`;
@@ -731,10 +741,11 @@ function openUser(uid) {
       getDocs(query(collection(db, "reports"), where("targetUserId", "==", uid), limit(30))).catch(() => null)
     ]);
     const banned = S.bannedSet.has(uid);
+    const pr = (await presenceOf([uid]))[uid] || {};
     body.innerHTML = `
       <div class="card"><div class="row" style="align-items:center">${avatar(u, true)}<div class="grow">
         <div style="font-size:20px;font-weight:800">@${esc(u.username)}</div>
-        <div class="muted">Katıldı ${fmtDay(u.joinDate)} · son aktif ${ago(u.lastActiveAt || u.lastSeenAt)}</div>
+        <div class="muted">Katıldı ${fmtDay(u.joinDate)} · son görülme ${pr.lastSeenAt ? ago(pr.lastSeenAt) : "gizli / yok"}</div>
         <div>${banned ? `<span class="chip bad">Askıda</span>` : ""}${u.isEmailVerified === false ? `<span class="chip warn">E-posta doğrulanmadı</span>` : `<span class="chip ok">Doğrulanmış</span>`}${u.profilePrivate ? `<span class="chip">Gizli profil</span>` : ""}${cr && cr.exists() ? `<span class="chip p">Sanatçı</span>` : ""}</div>
       </div></div>
       ${u.bio ? `<p style="margin:12px 0 0">${esc(u.bio)}</p>` : ""}
@@ -746,7 +757,7 @@ function openUser(uid) {
         ${(u.areas || []).length ? `<b>Semtler</b><span>${u.areas.map((x) => `<span class="chip">${esc(x.replace("|*", "").replace("|", " · "))}</span>`).join("")}</span>` : ""}
         <b>Takip ettiği mekân</b><span>${(u.followedVenues || []).length}</span>
         <b>Takip ettiği sanatçı</b><span>${(u.followingCreators || []).length}</span>
-        ${u.currentVenueId ? `<b>Şu an</b><span>${esc((S.biz.find((b) => b.id === u.currentVenueId) || {}).name || "bir mekânda")}</span>` : ""}
+        ${pr.currentVenueId ? `<b>Şu an</b><span>${esc((S.biz.find((b) => b.id === pr.currentVenueId) || {}).name || "bir mekânda")}</span>` : ""}
         <b>Kimlik</b><span style="font-family:monospace;font-size:12px">${esc(uid)}</span>
       </div>
       <div class="btns">${banned ? `<button class="b" data-a="unban">Askıyı kaldır</button>` : `<button class="b bad" data-a="ban">Hesabı askıya al</button>`}${cr && cr.exists() ? `<button class="b" data-a="cr">Sanatçı sayfası</button>` : ""}</div>

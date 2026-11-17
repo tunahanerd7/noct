@@ -1,27 +1,62 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Noct · Privacy Policy</title><style>*{box-sizing:border-box}body{margin:0;background:#0b0b10;color:#ececf1;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-main{max-width:720px;margin:0 auto;padding:40px 20px 80px}a{color:#ff7a45}h1{font-size:32px;margin:0 0 4px}h2{font-size:18px;margin:28px 0 6px}
-.muted{color:#9a9aa8;font-size:14px}nav{margin-bottom:32px}nav a{margin-right:16px;text-decoration:none;font-weight:600}ul{padding-left:20px}
-.logo{font-size:44px;font-weight:900;letter-spacing:-1px;margin:0}.card{background:#16161f;border-radius:16px;padding:20px;margin:16px 0}</style></head>
+<title>Noct · Privacy Policy (Draft)</title><style>*{box-sizing:border-box}body{margin:0;background:#0b0b10;color:#ececf1;font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:40px 20px 80px}a{color:#ff7a45}h1{font-size:32px;margin:0 0 4px}h2{font-size:19px;margin:28px 0 6px}
+.muted{color:#9a9aa8;font-size:14px}nav{margin-bottom:32px}nav a{margin-right:16px;text-decoration:none;font-weight:600}ul{padding-left:22px}
+.notice{background:#352813;border:1px solid #8f6623;color:#ffe3a3;border-radius:14px;padding:14px 16px;margin:20px 0}.placeholder{color:#ffd27a;font-weight:700}</style></head>
 <body><main><nav><a href="index.html">Noct</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="privacy-tr.html">Türkçe</a></nav>
 
-<h1>Privacy Policy</h1>
-<p class="muted">Last updated: November 2026</p>
-<h2>What we collect</h2>
-<ul><li>Account: email, username, birth date, gender. Your email and birth date are private and not shown to other users.</li><li>Personal info (optional): your name and phone number, if you add them or enter them for a reservation or venue request. Only you can see them in your profile.</li><li>Profile: photos, bio, music taste and the areas you pick.</li><li>Location: only while the app is open. Used to show nearby venues, to ask whether you&#x27;re at a venue (check-in), for the radar if you open it, and for &quot;Safe night&quot; if you start it.</li><li>Activity: friends, follows, plans and votes, check-ins, events you&#x27;re going to, venue ratings, moments, messages and photos you send, perks you use, reports and blocks.</li></ul>
-<h2>How we use it</h2>
-<p>To run Noct&#x27;s features (Tonight, the map, check-ins, friends, chat, plans, venue and artist pages), to suggest nights you might like, to keep the community safe, and to fix problems. Reminders are scheduled on your phone; we don&#x27;t send marketing messages.</p>
-<h2>Who can see what</h2>
-<ul><li>Everyone signed in: your username, profile photo, bio, music taste, photos and badges (if your profile is private, only friends see the details). Moments you share at a venue are public for 24 hours.</li><li>Your friends: your online status, last seen, the venue you&#x27;re at, venues you&#x27;ve visited and events you&#x27;re going to (you can hide these in Privacy settings).</li><li>Venues: only total numbers (followers, check-ins, people going, ratings), never who. A venue you send a reservation request to sees the name and phone number you enter, only for that booking. When you use a perk, the venue sees your username for that night.</li><li>Friends you add to &quot;Safe night&quot;: your live location until you end it.</li><li>If you apply to manage a venue or to become an artist: the Noct team sees what you enter, to verify you.</li><li>People you block can&#x27;t see you on the radar or message you.</li><li>We don&#x27;t sell your data and we don&#x27;t show ads.</li></ul>
-<h2>Where it&#x27;s stored</h2>
-<p>Data is stored with Google Firebase (Google Cloud), on servers that may be outside your country.</p>
-<h2>Deleting your data</h2>
-<p>Delete your account in Settings → Delete Account. This removes your profile, personal info, photos, moments, plans, reservations, venue and artist requests, your artist profile and Safe night data, and removes you from any venue team. Messages you sent may remain visible to the person you sent them to. Venue totals (like how many people checked in) are not changed.</p>
-<h2>Your rights</h2>
-<p>You can ask us what data we hold about you, ask us to correct or delete it, and object to how we use it, by writing to the address below.</p>
-<h2>Children</h2>
-<p>Noct is not for anyone under 17.</p>
-<h2>Contact</h2>
-<p><a href="mailto:tunahanerd7@gmail.com">tunahanerd7@gmail.com</a></p>
+<h1>Privacy Policy and Personal Data Notice</h1>
+<p class="muted">Draft · Last updated: November 17, 2026</p>
+<div class="notice"><strong>Draft for professional review; not ready for publication.</strong> Bracketed fields must be completed. Confirm the data flows, Firebase access rules, international transfer mechanism, and retention periods against the live service. The visibility descriptions for location and profile data below assume the planned privacy controls have been implemented.</div>
+
+<p>This draft describes how personal data is processed in the Noct app. For users in Türkiye, it is intended to support the information notice required under Personal Data Protection Law No. 6698 (“KVKK”). This notice provides information; it does not replace any separate consent that may be legally required.</p>
+
+<h2>1. Data controller</h2>
+<p>Data controller: <span class="placeholder">[Insert the controller’s legal name or full name, service address, and any required registry/tax details after professional review]</span> (“Noct,” “we”). Contact: <a href="mailto:tunahanerd7@gmail.com">tunahanerd7@gmail.com</a>.</p>
+
+<h2>2. Personal data we process</h2>
+<ul>
+ <li><strong>Account and identity:</strong> username, email address, date of birth, optional gender information, profile photo, account creation and sign-in information.</li>
+ <li><strong>Contact details and contact matching:</strong> optional phone number and full name; if you enable friend discovery, contact names and phone numbers/email addresses stored in your device’s address book. For matching, the app normalizes and hashes contact values on the device instead of uploading the raw address book as a list. The hash lookups and matching Noct account identifiers may be processed by our service providers.</li>
+ <li><strong>Profile and preferences:</strong> bio, music preferences, interests, selected areas, follows, badges, privacy choices and profile photos.</li>
+ <li><strong>Location and nightlife activity:</strong> device location to show nearby places; approximate location for radar when you enable it; venue and check-in information when you confirm a check-in; and location, venue name and update time in Safe Night sharing with friends you select. Safe Night location updates only while Noct is open. We may also process venue visit history, event attendance/interest, plans, votes, venue ratings and perk use.</li>
+ <li><strong>User content and communications:</strong> photos and moments, captions, chat messages and photos, plan notes, event/venue/artist content, notification preferences, reports and block records.</li>
+ <li><strong>Reservations and applications:</strong> name, phone number, party size, date and note you submit for a reservation; information and verification materials submitted in venue/artist applications and event proposals.</li>
+ <li><strong>Technical and usage data:</strong> app version, device and operating system information, push notification token, connection and crash/error records. Technical logs needed for security, abuse prevention and troubleshooting may also be generated.</li>
+</ul>
+
+<h2>3. Purposes and legal grounds</h2>
+<p>We process data to create accounts and authenticate users; provide the map, event discovery, friends, messaging, plans, check-ins, reservations, venue/artist pages and notifications; make personalized suggestions; host user content; respond to support requests; protect the service and prevent fraud or abuse; and understand service performance and fix errors.</p>
+<p>The applicable legal ground must be determined for each data category and purpose. Grounds that may apply include performance of a contract, compliance with a legal obligation, establishment/exercise/defence of a right, or legitimate interests where those interests do not override your fundamental rights. Location, contacts, photos and notifications depend on your choice to use the relevant feature and the permissions you grant through your device. Where consent is legally required, it should be collected separately from this notice and through a freely given choice.</p>
+
+<h2>4. Who may access data and who may receive it?</h2>
+<ul>
+ <li><strong>Other users:</strong> your public profile information; and friendship/event status or check-in information according to your privacy choices and the visibility rules in the app. Moments you share at a venue may be visible for 24 hours. Radar and Safe Night location are shared only when you enable the relevant feature and with the people described for that feature.</li>
+ <li><strong>Venues:</strong> a venue receiving your reservation request can see the name and phone number you entered for that request. When you use a perk, the venue may see your username for that transaction. Venue teams may access reservation details to respond to requests. Other event/check-in statistics are intended to be shown as aggregated counts where practicable.</li>
+ <li><strong>Authorized Noct personnel:</strong> limited access for support, application verification, report review and security operations.</li>
+ <li><strong>Service providers:</strong> Google Firebase/Google Cloud and Cloudflare for hosting, authentication and infrastructure; Apple Push Notification service and Firebase Cloud Messaging for notifications; and crash-reporting/diagnostic services. Apple or Google sign-in providers are involved if you choose those sign-in methods.</li>
+ <li><strong>Maps and open-data services:</strong> Apple MapKit and OpenStreetMap/Wikimedia services may be used to provide nearby places and map content. Your account or name is not intentionally included in map-area requests; service providers may process IP addresses and request/device data to deliver their services under their own policies.</li>
+ <li><strong>Public authorities:</strong> only where required by applicable law or necessary and legally permitted to protect rights.</li>
+</ul>
+<p>We do not sell personal data. Noct currently does not display third-party targeted advertising inside the app. Promotion of Noct on other platforms may be subject to those platforms’ own data practices.</p>
+
+<h2>5. International transfers</h2>
+<p>Some providers used by Noct may process or store data in countries outside Türkiye. The recipients/countries, data categories and purposes, and the applicable transfer condition under Article 9 of KVKK must be confirmed against actual provider contracts and infrastructure locations. Transfer mechanism: <span class="placeholder">[To be completed after professional review: adequacy decision, appropriate safeguard/standard contract, or other applicable legal condition; identify recipient and country]</span>. We do not assume that simply using the app constitutes consent to every international transfer.</p>
+
+<h2>6. Location, contacts and notification permissions</h2>
+<p>You can use some parts of Noct without granting location permission, but nearby venue and other location-based features may not work. Radar is optional and shares approximate location while enabled. You start Safe Night, select the friends who can receive it and can end sharing; location updates only while the app is open. Address book access is optional, and you can turn off the “findable by contacts” choice in the app. You can change notification permission in your device settings at any time.</p>
+
+<h2>7. Retention</h2>
+<p>We retain personal data for as long as needed for the relevant purpose and subject to applicable legal retention requirements. You can delete your account in the app. Deletion is initiated to erase or de-identify data linked to your account; limited records may be retained where required by law, to resolve disputes, for security records, or to preserve the integrity of communications with other users. Messages you sent may remain visible in recipients’ chats. Anonymous or aggregated venue statistics may remain. Moments are no longer shown in the app after 24 hours; deletion from backups and technical systems: <span class="placeholder">[Retention period to be confirmed by the professional reviewer/infrastructure owner]</span>.</p>
+
+<h2>8. Your KVKK rights and how to contact us</h2>
+<p>Subject to the conditions in Article 11 of KVKK, you may ask whether your personal data is processed; request information about processing; learn the purposes and whether data is used accordingly; learn third parties to whom data is transferred; request correction of incomplete or inaccurate data; request erasure/destruction where legal conditions are met; request notification of these actions to recipients; object to a result against you produced exclusively through automated analysis; and seek compensation for damage caused by unlawful processing.</p>
+<p>Send a request to <a href="mailto:tunahanerd7@gmail.com">tunahanerd7@gmail.com</a>, including your request and enough information to verify your identity. Requests will be handled as soon as possible and no later than 30 days, depending on their nature. The final submission channel and identity-verification method should be confirmed by the professional reviewer.</p>
+
+<h2>9. Children under 17</h2>
+<p>Noct is not designed for anyone under 17. Contact us if you believe we have processed data belonging to someone under 17.</p>
+
+<h2>10. Changes and contact</h2>
+<p>We may update this notice when app features, service providers or processing purposes change. We will communicate important changes through an appropriate channel. Questions and KVKK requests: <a href="mailto:tunahanerd7@gmail.com">tunahanerd7@gmail.com</a>.</p>
 <p class="muted"><a href="privacy-tr.html">Türkçe</a></p></main></body></html>
