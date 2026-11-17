@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Noct · Yönetim</title>
+<style>
+:root{--bg:#0b0b10;--card:#15151e;--card2:#1c1c28;--line:#2a2a3a;--text:#ececf1;--muted:#9a9aa8;--acc1:#8b5cf6;--acc2:#ec4899;--ok:#22c55e;--bad:#ef4444;--warn:#f59e0b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+a{color:#c4b5fd}
+header{position:sticky;top:0;z-index:5;background:rgba(11,11,16,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top{max-width:1100px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.logo{font-weight:900;font-size:24px;letter-spacing:-.5px;background:linear-gradient(90deg,var(--acc1),var(--acc2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.who{margin-left:auto;color:var(--muted);font-size:13px;display:flex;gap:10px;align-items:center}
+nav{max-width:1100px;margin:0 auto;padding:0 12px 10px;display:flex;gap:6px;overflow-x:auto}
+nav button{flex:none;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-weight:600;cursor:pointer;font-size:14px}
+nav button.on{background:linear-gradient(90deg,var(--acc1),var(--acc2));border-color:transparent}
+.badge{display:inline-block;min-width:20px;padding:0 6px;margin-left:6px;border-radius:999px;background:var(--bad);font-size:12px;line-height:20px;text-align:center}
+main{max-width:1100px;margin:0 auto;padding:18px 16px 80px}
+h2{font-size:20px;margin:6px 0 14px}
+h3{font-size:15px;margin:22px 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:0 0 12px}
+.row{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.grow{flex:1;min-width:220px}
+.title{font-weight:700;font-size:16px}
+.muted{color:var(--muted);font-size:13px}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:2px 12px;font-size:14px;margin-top:8px}
+.kv b{color:var(--muted);font-weight:500}
+.chip{display:inline-block;background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:1px 9px;font-size:12px;margin:2px 4px 2px 0}
+.chip.p{border-color:var(--acc1);color:#ddd6fe}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+button.b{border:0;border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer;font-size:14px;color:#fff;background:var(--card2);border:1px solid var(--line)}
+button.b.ok{background:var(--ok);border-color:transparent;color:#05250f}
+button.b.bad{background:transparent;border-color:var(--bad);color:#fca5a5}
+button.b.acc{background:linear-gradient(90deg,var(--acc1),var(--acc2));border-color:transparent}
+button.b:disabled{opacity:.5;cursor:default}
+input,select,textarea{background:var(--card2);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:inherit;width:100%}
+textarea{min-height:60px}
+label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+.thumb{width:84px;height:84px;object-fit:cover;border-radius:12px;background:var(--card2);cursor:zoom-in}
+.empty{color:var(--muted);text-align:center;padding:40px 0}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#232333;border:1px solid var(--line);padding:10px 16px;border-radius:12px;display:none;z-index:20;max-width:90vw}
+.login{max-width:380px;margin:12vh auto;padding:0 16px}
+.login .card{padding:24px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:600px){.grid2{grid-template-columns:1fr}}
+pre{white-space:pre-wrap;word-break:break-word;background:var(--card2);padding:12px;border-radius:10px;font-size:12px}
+.zoom{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:30;cursor:zoom-out}
+.zoom img{max-width:94vw;max-height:94vh;border-radius:12px}
+.feat{border-color:var(--acc1);box-shadow:0 0 0 1px rgba(139,92,246,.35),0 0 18px rgba(139,92,246,.15)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+<div class="zoom" id="zoom" onclick="this.style.display='none'"><img id="zoomImg" alt=""></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, collection, query, where, limit, serverTimestamp, deleteField, arrayUnion, arrayRemove, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// Firebase web ayarı (Firebase konsolu → Proje ayarları → Web uygulaması). Gizli bilgi değildir; güvenliği Firestore kuralları sağlar.
+const firebaseConfig = {
+  apiKey: "AIzaSyDutWy1ZkjkuysJm9JqTQvpzGR59yiGJ88",
+  authDomain: "auraapp-75d0c.firebaseapp.com",
+  projectId: "auraapp-75d0c",
+  storageBucket: "auraapp-75d0c.firebasestorage.app",
+  messagingSenderId: "360997024792",
+  appId: "1:360997024792:ios:f6e070529f52bac9ae3f6d"
+};
+const PUSH = "https://noct-push.tunahanerd7.workers.dev/";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ---------- yardımcılar ----------
+const $ = (s) => document.querySelector(s);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) => (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16))).toUpperCase();
+const toDate = (t) => t ? (t.toDate ? t.toDate() : new Date(t)) : null;
+const fmt = (t) => { const d = toDate(t); return d ? d.toLocaleString("tr-TR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"; };
+const daysLeft = (t) => { const d = toDate(t); return d ? Math.max(0, Math.ceil((d - Date.now()) / 864e5)) : 0; };
+const img = (b64) => b64 ? `<img class="thumb" src="${b64.startsWith("data:") || b64.startsWith("http") ? esc(b64) : "data:image/jpeg;base64," + esc(b64)}" onclick="zoomImg(this.src)" alt="">` : "";
+const mapLink = (lat, lon) => (lat || lon) ? `<a target="_blank" rel="noopener" href="https://maps.apple.com/?ll=${lat},${lon}&q=${lat},${lon}">Haritada aç</a>` : "";
+window.zoomImg = (src) => { $("#zoomImg").src = src; $("#zoom").style.display = "flex"; };
+function toast(msg, ms = 2600) { const t = $("#toast"); t.textContent = msg; t.style.display = "block"; clearTimeout(t._h); t._h = setTimeout(() => (t.style.display = "none"), ms); }
+async function guard(btn, fn) {
+  if (btn) btn.disabled = true;
+  try { await fn(); } catch (e) { console.error(e); toast("Hata: " + (e.message || e), 5000); }
+  finally { if (btn) btn.disabled = false; }
+}
+async function notify(type, ref) {
+  try {
+    const t = await auth.currentUser.getIdToken();
+    await fetch(PUSH, { method: "POST", headers: { Authorization: "Bearer " + t, "Content-Type": "application/json" }, body: JSON.stringify({ type, to: [], ref }) });
+  } catch (e) { console.warn("bildirim gönderilemedi", e); }
+}
+// Ülke / il / ilçe (harita baloncukları için)
+async function areaOf(lat, lon) {
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=tr&lat=${lat}&lon=${lon}`);
+    const a = (await r.json()).address || {};
+    const province = (a.province || a.state || a.city || "").replace(/ İli$/, "");
+    if (!province) return null;
+    return { country: a.country || "", province, district: a.town || a.county || a.city_district || a.municipality || a.suburb || province };
+  } catch { return null; }
+}
+const userCache = {};
+async function userOf(uid) {
+  if (!uid) return null;
+  if (!(uid in userCache)) { try { const s = await getDoc(doc(db, "users", uid)); userCache[uid] = s.exists() ? s.data() : null; } catch { userCache[uid] = null; } }
+  return userCache[uid];
+}
+// Uygulamadaki BusinessProfile kaydıyla aynı alanlar
+function newBusiness({ id, ownerId = "", uniqueMapId = "", name, type = "Venue", lat = 0, lon = 0, address = "", tags = [] }) {
+  return {
+    id, ownerId, uniqueMapId, name, type, instagram: "", coordinateLat: Number(lat) || 0, coordinateLon: Number(lon) || 0,
+    logoBase64: "", description: "", musicStyle: "Mixed", tags, events: [], noctScore: 0, visitors: 0,
+    details: { about: "", address, phone: "", website: "", priceLevel: 0, entryFee: "", dressCode: "", minAge: 0, features: [], hours: [], menu: [], acceptsReservations: false, reservationInfo: "" },
+    viewCount: 0, checkInTotal: 0, followerCount: 0, checkInHours: {}
+  };
+}
+const PUBLIC_TYPES = ["Stadium", "Arena", "Sports Hall", "Concert Hall", "Theatre Hall", "Opera House", "Open-air Theatre", "Ancient Theatre", "Culture Center", "Museum", "Exhibition Center", "Convention Center", "Shopping Mall", "Square", "Park", "Festival Area", "Public Beach", "Pier & Waterfront", "Event Venue"];
+const ROLE_TR = { owner: "Sahip", manager: "Müdür", events: "Etkinlik sorumlusu", staff: "Çalışan" };
+const KIND_TR = { event: "Etkinlik", venue: "Mekân", artist: "Sanatçı" };
+
+// ---------- durum ----------
+const S = { tab: "claims", venueClaims: [], creatorClaims: [], gigs: [], reports: [], banned: [], featureReqs: [], publicPlaces: [], loaded: false };
+const TABS = [
+  ["claims", "Mekân başvuruları", () => S.venueClaims.length],
+  ["creators", "Sanatçı başvuruları", () => S.creatorClaims.length],
+  ["gigs", "Etkinlik önerileri", () => S.gigs.length],
+  ["reports", "Şikâyetler", () => S.reports.length],
+  ["banned", "Askıdakiler", () => 0],
+  ["featured", "Öne çıkarma", () => S.featureReqs.length],
+  ["places", "Kamuya açık alanlar", () => 0],
+  ["tools", "Araçlar", () => 0]
+];
+
+// ---------- giriş ----------
+function renderLogin(msg = "") {
+  $("#app").innerHTML = `
+  <div class="login"><div class="card">
+    <div class="logo" style="font-size:40px">Noct</div>
+    <p class="muted" style="margin-top:0">Yönetim paneli · sadece yetkili hesaplar</p>
+    <label>E-posta</label><input id="em" type="email" autocomplete="username">
+    <label>Şifre</label><input id="pw" type="password" autocomplete="current-password">
+    <div class="btns"><button class="b acc" id="go" style="flex:1">Giriş yap</button></div>
+    <div class="btns"><button class="b" id="gg" style="flex:1">Google ile giriş</button></div>
+    <p class="muted" id="lmsg" style="color:#fca5a5">${esc(msg)}</p>
+  </div></div>`;
+  $("#go").onclick = () => guard($("#go"), async () => { await signInWithEmailAndPassword(auth, $("#em").value.trim(), $("#pw").value); });
+  $("#pw").onkeydown = (e) => { if (e.key === "Enter") $("#go").click(); };
+  $("#gg").onclick = () => guard($("#gg"), async () => { await signInWithPopup(auth, new GoogleAuthProvider()); });
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return renderLogin();
+  $("#app").innerHTML = `<div class="empty">Kontrol ediliyor…</div>`;
+  let ok = false;
+  try { ok = (await getDoc(doc(db, "admins", user.uid))).exists(); } catch { ok = false; }
+  if (!ok) { await signOut(auth); return renderLogin("Bu hesabın yönetim yetkisi yok."); }
+  renderShell();
+  await loadAll();
+});
+
+function renderShell() {
+  $("#app").innerHTML = `
+  <header>
+    <div class="top"><div class="logo">Noct</div><span class="muted">Yönetim</span>
+      <div class="who"><span>${esc(auth.currentUser.email || "")}</span><button class="b" id="rf">Yenile</button><button class="b" id="so">Çıkış</button></div></div>
+    <nav id="tabs"></nav>
+  </header>
+  <main id="main"><div class="empty">Yükleniyor…</div></main>`;
+  $("#so").onclick = () => signOut(auth);
+  $("#rf").onclick = () => guard($("#rf"), loadAll);
+}
+function renderTabs() {
+  $("#tabs").innerHTML = TABS.map(([k, t, c]) => `<button data-t="${k}" class="${S.tab === k ? "on" : ""}">${t}${c() ? `<span class="badge">${c()}</span>` : ""}</button>`).join("");
+  document.querySelectorAll("#tabs button").forEach((b) => (b.onclick = () => { S.tab = b.dataset.t; render(); }));
+}
+function render() {
+  renderTabs();
+  const v = { claims: viewClaims, creators: viewCreators, gigs: viewGigs, reports: viewReports, banned: viewBanned, featured: viewFeatured, places: viewPlaces, tools: viewTools }[S.tab];
+  $("#main").innerHTML = "";
+  v($("#main"));
+}
+
+// ---------- yükleme ----------
+const docs = (s) => s.docs.map((d) => ({ ...d.data(), id: d.id }));
+async function loadAll() {
+  const pend = (c) => getDocs(query(collection(db, c), where("status", "==", "pending")));
+  const [vc, cc, rp, bn, fr, pp] = await Promise.all([
+    pend("venueClaims"), pend("creatorClaims"),
+    getDocs(query(collection(db, "reports"), where("status", "==", "open"), limit(100))),
+    getDocs(query(collection(db, "banned"), limit(200))),
+    pend("featureRequests"),
+    getDocs(query(collection(db, "businesses"), where("isPublic", "==", true)))
+  ]);
+  const byOld = (a, b) => (toDate(a.createdAt) || 0) - (toDate(b.createdAt) || 0);
+  const byNew = (a, b) => -byOld(a, b);
+  S.venueClaims = docs(vc).sort(byOld);
+  S.creatorClaims = docs(cc).sort(byOld);
+  S.reports = docs(rp).sort(byNew);
+  S.banned = docs(bn).sort(byNew);
+  S.featureReqs = docs(fr).sort(byOld);
+  S.publicPlaces = docs(pp).sort((a, b) => String(a.name).localeCompare(String(b.name), "tr"));
+  // Sahibi / ekibi olmayan kamuya açık alanlara gelen etkinlik önerileri
+  const unmanaged = S.publicPlaces.filter((b) => !b.ownerId && !(b.teamIds || []).length && !Object.keys(b.team || {}).length).slice(0, 120);
+  const gigSnaps = await Promise.all(unmanaged.map((b) => getDocs(query(collection(db, "businesses", b.id, "gigRequests"), where("status", "==", "pending"))).catch(() => null)));
+  S.gigs = gigSnaps.flatMap((s) => (s ? docs(s) : [])).sort((a, b) => (toDate(a.startTime) || 0) - (toDate(b.startTime) || 0));
+  S.loaded = true;
+  render();
+}
+function empty(el, text) { el.insertAdjacentHTML("beforeend", `<div class="empty">${text}</div>`); }
+function card(el, html, cls = "") { const d = document.createElement("div"); d.className = "card " + cls; d.innerHTML = html; el.appendChild(d); return d; }
+
+// ---------- MEKÂN BAŞVURULARI ----------
+function viewClaims(el) {
+  el.insertAdjacentHTML("beforeend", `<h2>Mekân başvuruları</h2>`);
+  if (!S.venueClaims.length) return empty(el, "Bekleyen başvuru yok.");
+  for (const c of S.venueClaims) {
+    const d = card(el, `
+      <div class="title">${esc(c.venueName)}</div>
+      <div class="muted">${c.venueId ? "Noct'ta kayıtlı yer" : "Yeni mekân açılacak"} · ${fmt(c.createdAt)}</div>
+      <div class="kv">
+        <b>Rol</b><span>${esc(ROLE_TR[c.role] || c.role)}</span>
+        <b>Başvuran</b><span>${esc(c.fullName)} (@${esc(c.username)})</span>
+        <b>Telefon</b><span>${c.phone ? `<a href="tel:${esc(c.phone)}">${esc(c.phone)}</a>` : "—"}</span>
+        <b>Tür</b><span>${esc(c.venueType || "—")}</span>
+        <b>Adres</b><span>${esc(c.venueAddress || "—")} ${mapLink(c.lat, c.lon)}</span>
+        ${c.note ? `<b>Not</b><span>${esc(c.note)}</span>` : ""}
+      </div>
+      <div class="btns"><button class="b ok" data-a="ok">Onayla</button><button class="b bad" data-a="no">Reddet</button></div>`);
+    d.querySelector('[data-a="ok"]').onclick = (e) => guard(e.target, async () => { await approveClaim(c); toast("Onaylandı: " + c.venueName); });
+    d.querySelector('[data-a="no"]').onclick = (e) => {
+      const note = prompt("Red sebebi (başvurana gösterilir, boş bırakılabilir):", "");
+      if (note === null) return;
+      guard(e.target, async () => {
+        await updateDoc(doc(db, "venueClaims", c.id), { status: "rejected", adminNote: note.trim().slice(0, 200), reviewedAt: serverTimestamp() });
+        S.venueClaims = S.venueClaims.filter((x) => x.id !== c.id); render();
+        notify("claimResult", { col: "venueClaims", id: c.id }); toast("Reddedildi");
+      });
+    };
+  }
+}
+async function approveClaim(c) {
+  const role = ["owner", "manager", "events", "staff"].includes(c.role) ? c.role : "staff";
+  let venueId = c.venueId || "";
+  if (!venueId && c.uniqueMapId) {
+    const s = await getDocs(query(collection(db, "businesses"), where("uniqueMapId", "==", c.uniqueMapId), limit(1)));
+    if (!s.empty) venueId = s.docs[0].id;
+  }
+  if (!venueId) {
+    const id = uuid();
+    const d = newBusiness({ id, ownerId: role === "owner" ? c.userId : "", uniqueMapId: c.uniqueMapId || "", name: c.venueName, type: c.venueType || "Venue", lat: c.lat, lon: c.lon, address: c.venueAddress || "" });
+    if (role !== "owner") { d.team = { [c.userId]: role }; d.teamIds = [c.userId]; }
+    const a = await areaOf(c.lat, c.lon); if (a) Object.assign(d, a);
+    await setDoc(doc(db, "businesses", id), d);
+    venueId = id;
+  } else {
+    const ref = doc(db, "businesses", venueId);
+    const snap = await getDoc(ref);
+    const existingOwner = (snap.exists() && snap.data().ownerId) || "";
+    const data = { ["teamInvites." + c.userId]: deleteField(), invitedIds: arrayRemove(c.userId) };
+    if (role === "owner" && (!existingOwner || existingOwner === c.userId)) {
+      data.ownerId = c.userId; data["team." + c.userId] = deleteField(); data.teamIds = arrayRemove(c.userId);
+    } else {
+      data["team." + c.userId] = role; data.teamIds = arrayUnion(c.userId);
+    }
+    await updateDoc(ref, data);
+  }
+  await updateDoc(doc(db, "venueClaims", c.id), { status: "approved", venueId, reviewedAt: serverTimestamp() });
+  S.venueClaims = S.venueClaims.filter((x) => x.id !== c.id); render();
+  notify("claimResult", { col: "venueClaims", id: c.id });
+}
+
+// ---------- SANATÇI BAŞVURULARI ----------
+function viewCreators(el) {
+  el.insertAdjacentHTML("beforeend", `<h2>Sanatçı başvuruları</h2>`);
+  if (!S.creatorClaims.length) return empty(el, "Bekleyen başvuru yok.");
+  for (const c of S.creatorClaims) {
+    const ig = String(c.instagram || "").replace("@", "").trim();
+    const igUrl = ig ? (ig.startsWith("http") ? ig : "https://instagram.com/" + ig) : "";
+    const d = card(el, `
+      <div class="title">${esc(c.name)} <span class="chip p">${esc(c.kind)}</span></div>
+      <div class="muted">@${esc(c.username)} · ${fmt(c.createdAt)}</div>
+      <div class="kv">
+        <b>Instagram</b><span>${igUrl ? `<a target="_blank" rel="noopener" href="${esc(igUrl)}">${esc(c.instagram)}</a>` : "—"}</span>
+        <b>Doğrulama kodu</b><span><b style="color:var(--text)">${esc(c.code)}</b> <span class="muted">(Instagram biyografisinde ya da DM'de olmalı)</span></span>
+        ${c.city ? `<b>Şehir</b><span>${esc(c.city)}</span>` : ""}
+        ${(c.genres || []).length ? `<b>Türler</b><span>${c.genres.map((g) => `<span class="chip">${esc(g)}</span>`).join("")}</span>` : ""}
+        ${c.musicLink ? `<b>Müzik</b><span><a target="_blank" rel="noopener" href="${esc(c.musicLink)}">${esc(c.musicLink)}</a></span>` : ""}
+        ${c.extraLink ? `<b>Ek bağlantı</b><span><a target="_blank" rel="noopener" href="${esc(c.extraLink)}">${esc(c.extraLink)}</a></span>` : ""}
+        ${c.followers ? `<b>Takipçi</b><span>${esc(c.followers)}</span>` : ""}
+        ${c.note ? `<b>Not</b><span>${esc(c.note)}</span>` : ""}
+      </div>
+      <div class="btns"><button class="b ok" data-a="ok">Onayla</button><button class="b bad" data-a="no">Reddet</button></div>`);
+    d.querySelector('[data-a="ok"]').onclick = (e) => guard(e.target, async () => { await approveCreator(c); toast("Onaylandı: " + c.name); });
+    d.querySelector('[data-a="no"]').onclick = (e) => {
+      const r = prompt("Red sebebi (başvurana gösterilir, boş bırakılabilir):", "");
+      if (r === null) return;
+      guard(e.target, async () => {
+        const data = { status: "rejected" }; if (r.trim()) data.rejectReason = r.trim().slice(0, 200);
+        await updateDoc(doc(db, "creatorClaims", c.id), data);
+        S.creatorClaims = S.creatorClaims.filter((x) => x.id !== c.id); render();
+        notify("claimResult", { col: "creatorClaims", id: c.id }); toast("Reddedildi");
+      });
+    };
+  }
+}
+async function approveCreator(c) {
+  const cr = { id: c.userId, ownerId: c.userId, name: c.name, kind: c.kind || "other", followerCount: 0, verified: true, createdAt: serverTimestamp() };
+  if (c.genres) cr.genres = c.genres;
+  if (c.city) cr.city = c.city;
+  if (c.instagram) cr.instagram = c.instagram;
+  const m = c.musicLink || "";
+  if (m.includes("spotify")) cr.spotify = m; else if (m.includes("soundcloud")) cr.soundcloud = m; else if (m.includes("youtu")) cr.youtube = m;
+  const u = await userOf(c.userId);
+  if (u && u.profileImgBase64) cr.img = u.profileImgBase64;
+  await setDoc(doc(db, "creators", c.userId), cr);
+  await updateDoc(doc(db, "creatorClaims", c.id), { status: "approved", creatorId: c.userId });
+  S.creatorClaims = S.creatorClaims.filter((x) => x.id !== c.id); render();
+  notify("claimResult", { col: "creatorClaims", id: c.id });
+}
+
+// ---------- KAMUYA AÇIK ALAN ETKİNLİK ÖNERİLERİ ----------
+function viewGigs(el) {
+  el.insertAdjacentHTML("beforeend", `<h2>Kamuya açık alanlara etkinlik önerileri</h2><p class="muted">Sahibi olmayan yerlere (stadyum, meydan, park…) gelen öneriler. Sahibi olan yerlerin önerilerine kendi ekipleri bakar.</p>`);
+  if (!S.gigs.length) return empty(el, "Bekleyen öneri yok.");
+  for (const g of S.gigs) {
+    const d = card(el, `
+      <div class="row">
+        ${img(g.posterBase64)}
+        <div class="grow">
+          <div class="title">${esc(g.title)} ${g.changeOf ? `<span class="chip p">Değişiklik isteği</span>` : ""}</div>
+          <div class="muted">${esc(g.venueName)} · ${esc(g.creatorName)}</div>
+          <div class="kv">
+            <b>Başlangıç</b><span>${fmt(g.startTime)}</span>
+            <b>Bitiş</b><span>${fmt(g.endTime)}</span>
+            ${g.category ? `<b>Tür</b><span>${esc(g.category)}</span>` : ""}
+            ${(g.genres || []).length ? `<b>Müzik</b><span>${g.genres.map((x) => `<span class="chip">${esc(x)}</span>`).join("")}</span>` : ""}
+            <b>Giriş</b><span>${g.entryType === "free" ? "Ücretsiz" : g.entryType === "paid" ? "Ücretli " + esc(g.priceText || "") : "—"}</span>
+            ${g.ticketURL ? `<b>Bilet</b><span><a target="_blank" rel="noopener" href="${esc(g.ticketURL)}">${esc(g.ticketURL)}</a></span>` : ""}
+            ${g.desc ? `<b>Açıklama</b><span>${esc(g.desc)}</span>` : ""}
+            <b>İzin belgesi</b><span>${g.permitBase64 ? img(g.permitBase64) : `<span style="color:var(--warn)">Yüklenmemiş</span>`} ${esc(g.permitNote || "")}</span>
+          </div>
+        </div>
+      </div>
+      <div class="btns"><button class="b ok" data-a="ok">Onayla ve yayınla</button><button class="b bad" data-a="no">Reddet</button></div>`);
+    d.querySelector('[data-a="ok"]').onclick = (e) => guard(e.target, async () => { await approveGig(g); toast("Yayınlandı: " + g.title); });
+    d.querySelector('[data-a="no"]').onclick = (e) => {
+      const r = prompt("Red sebebi (önerene gösterilir, boş bırakılabilir):", "");
+      if (r === null) return;
+      guard(e.target, async () => {
+        const data = { status: "rejected", decidedAt: serverTimestamp() }; if (r.trim()) data.rejectReason = r.trim().slice(0, 200);
+        await updateDoc(doc(db, "businesses", g.venueId, "gigRequests", g.id), data);
+        S.gigs = S.gigs.filter((x) => x.id !== g.id); render();
+        notify("gigStatus", { venueId: g.venueId, gigId: g.id }); toast("Reddedildi");
+      });
+    };
+  }
+}
+async function approveGig(g) {
+  const ref = doc(db, "businesses", g.venueId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error("Yer bulunamadı");
+  const events = Array.isArray(snap.data().events) ? snap.data().events.slice() : [];
+  const fill = (ev) => {
+    ev.title = g.title; ev.desc = g.desc || ""; ev.startTime = g.startTime; ev.endTime = g.endTime;
+    for (const k of ["genres", "entryType", "priceText", "category", "artistIds"]) { if (g[k] != null) ev[k] = g[k]; else delete ev[k]; }
+    if (g.ticketURL) { ev.ticketURL = g.ticketURL; ev.ticketMode = "external"; } else { delete ev.ticketURL; delete ev.ticketMode; }
+  };
+  let eventId;
+  const i = g.changeOf ? events.findIndex((e) => String(e.id).toUpperCase() === String(g.changeOf).toUpperCase()) : -1;
+  if (i >= 0) {
+    const ev = { ...events[i] }; fill(ev); eventId = ev.id; events[i] = ev;
+  } else {
+    eventId = uuid();
+    const ev = { id: eventId, isRecurring: false, lineup: g.creatorName, creatorId: g.creatorId, creatorName: g.creatorName };
+    fill(ev); events.push(ev);
+  }
+  // Afiş ayrı dokümanda durur (uygulamadaki gibi)
+  if (g.posterBase64) {
+    await setDoc(doc(db, "businesses", g.venueId, "posters", eventId), { img: g.posterBase64 });
+    const ev = events.find((e) => e.id === eventId); delete ev.posterBase64; ev.hasPoster = true;
+  }
+  await updateDoc(ref, { events });
+  await updateDoc(doc(db, "businesses", g.venueId, "gigRequests", g.id), { status: "approved", decidedAt: serverTimestamp(), eventId });
+  S.gigs = S.gigs.filter((x) => x.id !== g.id); render();
+  notify("gigStatus", { venueId: g.venueId, gigId: g.id });
+}
+
+// ---------- ŞİKÂYETLER ----------
+function viewReports(el) {
+  el.insertAdjacentHTML("beforeend", `<h2>Şikâyetler</h2>`);
+  if (!S.reports.length) return empty(el, "Açık şikâyet yok.");
+  for (const r of S.reports) {
+    const d = card(el, `
+      <div class="title">${esc(r.reason || "Şikâyet")}</div>
+      <div class="muted">${fmt(r.createdAt)}</div>
+      <div class="kv">
+        <b>Şikâyet edilen</b><span data-u="${esc(r.targetUserId)}">…</span>
+        <b>Şikâyet eden</b><span data-u="${esc(r.reporterId)}">…</span>
+        ${r.details ? `<b>Ayrıntı</b><span>${esc(r.details)}</span>` : ""}
+        ${r.messageText ? `<b>Mesaj</b><span>“${esc(r.messageText)}”</span>` : ""}
+      </div>
+      <div class="btns"><button class="b" data-a="ok">Kapat (sorun yok)</button><button class="b bad" data-a="ban">Hesabı askıya al</button></div>`);
+    d.querySelectorAll("[data-u]").forEach(async (s) => { const u = await userOf(s.dataset.u); s.textContent = u ? "@" + (u.username || "?") : s.dataset.u || "—"; });
+    const close = async () => { await updateDoc(doc(db, "reports", r.id), { status: "resolved" }); S.reports = S.reports.filter((x) => x.id !== r.id); render(); };
+    d.querySelector('[data-a="ok"]').onclick = (e) => guard(e.target, async () => { await close(); toast("Kapatıldı"); });
+    d.querySelector('[data-a="ban"]').onclick = (e) => {
+      const reason = prompt("Askıya alma sebebi (kullanıcıya gösterilir):", r.reason || "");
+      if (reason === null) return;
+      guard(e.target, async () => {
+        const u = await userOf(r.targetUserId);
+        await setDoc(doc(db, "banned", r.targetUserId), { uid: r.targetUserId, username: (u && u.username) || "", reason: reason.trim().slice(0, 200), createdAt: serverTimestamp() });
+        await close();
+        S.banned.unshift({ id: r.targetUserId, uid: r.targetUserId, username: (u && u.username) || "", reason, createdAt: Timestamp.now() });
+        render(); toast("Hesap askıya alındı");
+      });
+    };
+  }
+}
+function viewBanned(el) {
+  el.insertAdjacentHTML("beforeend", `<h2>Askıya alınan hesaplar</h2>`);
+  if (!S.banned.length) return empty(el, "Askıda hesap yok.");
+  for (const b of S.banned) {
+    const d = card(el, `<div class="row"><div class="grow"><div class="title">@${esc(b.username || b.id)}</div>
+      <div class="muted">${esc(b.reason || "")} · ${fmt(b.createdAt)}</div></div>
+      <button class="b" data-a="un">Askıyı kaldır</button></div>`);
+    d.querySelector('[data-a="un"]').onclick = (e) => {
+      if (!confirm("@" + (b.username || b.id) + " hesabının askısı kaldırılsın mı?")) return;
+      guard(e.target, async () => { await deleteDoc(doc(db, "banned", b.id)); S.banned = S.banned.filter((x) => x.id !== b.id); render(); toast("Askı kaldırıldı"); });
+    };
+  }
+}
+
+// ---------- ÖNE ÇIKARMA ----------
+const untilTs = (days) => Timestamp.fromMillis(Date.now() + days * 864e5);
+async function setFeatured(kind, ids, days) {
+  const v = days ? untilTs(days) : deleteField();
+  if (kind === "event") await updateDoc(doc(db, "businesses", ids.venueId), { ["featuredEvents." + ids.eventId]: v });
+  else if (kind === "venue") await updateDoc(doc(db, "businesses", ids.venueId), { featuredUntil: v });
+  else await updateDoc(doc(db, "creators", ids.creatorId), { featuredUntil: v });
+}
+function viewFeatured(el) {
+  el.insertAdjacentHTML("beforeend", `<h2>Öne çıkarma talepleri</h2>`);
+  if (!S.featureReqs.length) empty(el, "Bekleyen talep yok.");
+  for (const r of S.featureReqs) {
+    const d = card(el, `
+      <div class="title">${esc(r.title)} <span class="chip p">${esc(KIND_TR[r.kind] || r.kind)}</span></div>
+      <div class="muted">${esc(r.requesterName)} · ${fmt(r.createdAt)}</div>
+      <div class="kv"><b>Süre</b><span>${Number(r.days) || 1} gün</span>${r.note ? `<b>Not</b><span>${esc(r.note)}</span>` : ""}</div>
+      <div class="btns"><button class="b ok" data-a="ok">Onayla (${Number(r.days) || 1} gün)</button><button class="b bad" data-a="no">Reddet</button></div>`);
+    const decide = (approve) => async () => {
+      if (approve) await setFeatured(r.kind, r, Number(r.days) || 1);
+      await updateDoc(doc(db, "featureRequests", r.id), { status: approve ? "approved" : "rejected", decidedAt: serverTimestamp() });
+      S.featureReqs = S.featureReqs.filter((x) => x.id !== r.id); render();
+      notify("featureResult", { id: r.id }); toast(approve ? "Öne çıkarıldı" : "Reddedildi");
+    };
+    d.querySelector('[data-a="ok"]').onclick = (e) => guard(e.target, decide(true));
+    d.querySelector('[data-a="no"]').onclick = (e) => guard(e.target, decide(false));
+  }
+
+  el.insertAdjacentHTML("beforeend", `<h3>Şu an öne çıkanlar</h3><div id="activeF"><div class="muted">Yükleniyor…</div></div>
+    <h3>Elle öne çıkar / kaldır</h3>
+    <div class="card"><div class="grid2">
+      <div><label>Mekân adı (büyük-küçük harf önemli, başını yazman yeter)</label><input id="qv" placeholder="ör. Zorlu"></div>
+      <div><label>Sanatçı adı</label><input id="qc" placeholder="ör. DJ"></div>
+    </div><div id="searchRes"></div></div>`);
+  loadActiveFeatured();
+  let h;
+  const run = () => { clearTimeout(h); h = setTimeout(() => guard(null, searchTargets), 350); };
+  $("#qv").oninput = run; $("#qc").oninput = run;
+}
+async function loadActiveFeatured() {
+  const box = $("#activeF"); if (!box) return;
+  const now = Timestamp.now();
+  const [vs, cs, ev] = await Promise.all([
+    getDocs(query(collection(db, "businesses"), where("featuredUntil", ">", now))),
+    getDocs(query(collection(db, "creators"), where("featuredUntil", ">", now))),
+    getDocs(query(collection(db, "featureRequests"), where("status", "==", "approved"), where("kind", "==", "event"), limit(60)))
+  ]);
+  const rows = [];
+  docs(vs).forEach((b) => rows.push({ kind: "venue", title: b.name, left: daysLeft(b.featuredUntil), ids: { venueId: b.id } }));
+  docs(cs).forEach((c) => rows.push({ kind: "artist", title: c.name, left: daysLeft(c.featuredUntil), ids: { creatorId: c.id } }));
+  const seen = new Set();
+  for (const r of docs(ev)) {
+    const k = r.venueId + "|" + r.eventId; if (seen.has(k) || !r.venueId || !r.eventId) continue; seen.add(k);
+    const b = await getDoc(doc(db, "businesses", r.venueId)).catch(() => null);
+    const t = b && b.exists() && (b.data().featuredEvents || {})[r.eventId];
+    if (t && toDate(t) > new Date()) rows.push({ kind: "event", title: r.title, left: daysLeft(t), ids: { venueId: r.venueId, eventId: r.eventId } });
+  }
+  box.innerHTML = "";
+  if (!rows.length) return (box.innerHTML = `<div class="muted">Şu an öne çıkan yok.</div>`);
+  for (const r of rows) {
+    const d = card(box, `<div class="row"><div class="grow"><div class="title">${esc(r.title)} <span class="chip p">${KIND_TR[r.kind]}</span></div>
+      <div class="muted">${r.left} gün kaldı</div></div><button class="b bad" data-a="rm">Kaldır</button></div>`, "feat");
+    d.querySelector('[data-a="rm"]').onclick = (e) => {
+      if (!confirm("“" + r.title + "” öne çıkarmadan kaldırılsın mı?")) return;
+      guard(e.target, async () => { await setFeatured(r.kind, r.ids, null); d.remove(); toast("Kaldırıldı"); });
+    };
+  }
+}
+async function searchTargets() {
+  const out = $("#searchRes"); if (!out) return;
+  const qv = $("#qv").value.trim(), qc = $("#qc").value.trim();
+  const byName = (col, q) => getDocs(query(collection(db, col), where("name", ">=", q), where("name", "<=", q + ""), limit(12)));
+  const [vs, cs] = await Promise.all([qv.length >= 2 ? byName("businesses", qv) : null, qc.length >= 2 ? byName("creators", qc) : null]);
+  out.innerHTML = "";
+  const now = new Date();
+  for (const b of vs ? docs(vs) : []) {
+    const on = toDate(b.featuredUntil) > now;
+    const d = card(out, `<div class="row"><div class="grow"><div class="title">${esc(b.name)} <span class="chip">${esc(b.type)}</span></div>
+      <div class="muted">${esc(b.province || "")} ${on ? `· öne çıkan, ${daysLeft(b.featuredUntil)} gün` : ""}</div></div>
+      <select data-a="d" style="width:auto"><option>3</option><option selected>7</option><option>14</option><option>30</option></select>
+      <button class="b acc" data-a="on">Öne çıkar</button>${on ? `<button class="b bad" data-a="off">Kaldır</button>` : ""}</div>`, on ? "feat" : "");
+    d.querySelector('[data-a="on"]').onclick = (e) => guard(e.target, async () => { await setFeatured("venue", { venueId: b.id }, Number(d.querySelector('[data-a="d"]').value)); toast("Öne çıkarıldı"); searchTargets(); loadActiveFeatured(); });
+    const off = d.querySelector('[data-a="off"]'); if (off) off.onclick = (e) => guard(e.target, async () => { await setFeatured("venue", { venueId: b.id }, null); toast("Kaldırıldı"); searchTargets(); loadActiveFeatured(); });
+  }
+  for (const c of cs ? docs(cs) : []) {
+    const on = toDate(c.featuredUntil) > now;
+    const d = card(out, `<div class="row"><div class="grow"><div class="title">${esc(c.name)} <span class="chip">${esc(c.kind)}</span> ${c.verified ? `<span class="chip p">Onaylı</span>` : ""}</div>
+      <div class="muted">${esc(c.city || "")} ${on ? `· öne çıkan, ${daysLeft(c.featuredUntil)} gün` : ""}</div></div>
+      <select data-a="d" style="width:auto"><option>3</option><option selected>7</option><option>14</option><option>30</option></select>
+      <button class="b acc" data-a="on">Öne çıkar</button>${on ? `<button class="b bad" data-a="off">Kaldır</button>` : ""}
+      <button class="b" data-a="ver">${c.verified ? "Onay rozetini kaldır" : "Onay rozeti ver"}</button></div>`, on ? "feat" : "");
+    d.querySelector('[data-a="on"]').onclick = (e) => guard(e.target, async () => { await setFeatured("artist", { creatorId: c.id }, Number(d.querySelector('[data-a="d"]').value)); toast("Öne çıkarıldı"); searchTargets(); loadActiveFeatured(); });
+    const off = d.querySelector('[data-a="off"]'); if (off) off.onclick = (e) => guard(e.target, async () => { await setFeatured("artist", { creatorId: c.id }, null); toast("Kaldırıldı"); searchTargets(); loadActiveFeatured(); });
+    d.querySelector('[data-a="ver"]').onclick = (e) => guard(e.target, async () => { await updateDoc(doc(db, "creators", c.id), { verified: !c.verified }); toast("Güncellendi"); searchTargets(); });
+  }
+  if ((qv.length >= 2 || qc.length >= 2) && !out.children.length) out.innerHTML = `<div class="muted" style="margin-top:10px">Sonuç yok.</div>`;
+}
+
+// ---------- KAMUYA AÇIK ALANLAR ----------
+function viewPlaces(el) {
+  el.insertAdjacentHTML("beforeend", `<h2>Kamuya açık alanlar <span class="muted">(${S.publicPlaces.length})</span></h2>
+    <p class="muted">Haritadaki OpenStreetMap yerleri otomatik gelir. Burada Noct'a kayıtlı olanları düzenler, siler ya da elle yeni yer eklersin.</p>
+    <div class="card"><div class="title">Yeni yer ekle</div>
+      <div class="grid2">
+        <div><label>Ad</label><input id="nName"></div>
+        <div><label>Tür</label><select id="nType"><option value="">Türsüz</option>${PUBLIC_TYPES.map((t) => `<option>${t}</option>`).join("")}</select></div>
+        <div><label>Konum (enlem, boylam — Google/Apple Haritalar'dan kopyala)</label><input id="nLoc" placeholder="41.0369, 28.9850"></div>
+        <div><label>Adres (boş bırakırsan otomatik bulunur)</label><input id="nAddr"></div>
+      </div>
+      <div class="btns"><button class="b acc" id="nAdd">Ekle</button></div>
+    </div>
+    <input id="pq" placeholder="Listede ara…" style="margin:6px 0 12px"><div id="plist"></div>`);
+  $("#nAdd").onclick = (e) => guard(e.target, addPlace);
+  const draw = () => {
+    const q = $("#pq").value.trim().toLocaleLowerCase("tr");
+    const list = $("#plist"); list.innerHTML = "";
+    const items = S.publicPlaces.filter((p) => !q || String(p.name).toLocaleLowerCase("tr").includes(q) || String(p.province || "").toLocaleLowerCase("tr").includes(q));
+    items.slice(0, 150).forEach((p) => placeCard(list, p));
+    if (items.length > 150) list.insertAdjacentHTML("beforeend", `<div class="muted">+${items.length - 150} yer daha — aramayı daralt.</div>`);
+    if (!items.length) list.innerHTML = `<div class="empty">Yer yok.</div>`;
+  };
+  $("#pq").oninput = draw; draw();
+}
+function placeCard(list, p) {
+  const managed = !!p.ownerId || Object.keys(p.team || {}).length > 0;
+  const d = card(list, `
+    <div class="row"><div class="grow">
+      <div class="title">${esc(p.name)} ${p.type ? `<span class="chip">${esc(p.type)}</span>` : `<span class="chip">Türsüz</span>`} ${managed ? `<span class="chip p">Sahiplenilmiş</span>` : ""} ${p.osmRef ? `<span class="chip">OSM</span>` : ""}</div>
+      <div class="muted">${esc([p.district, p.province, p.country].filter(Boolean).join(", "))} · ${esc((p.details || {}).address || "")} ${mapLink(p.coordinateLat, p.coordinateLon)}</div>
+    </div><button class="b" data-a="ed">Düzenle</button></div>
+    <div data-f style="display:none">
+      <div class="grid2">
+        <div><label>Ad</label><input data-k="name" value="${esc(p.name)}"></div>
+        <div><label>Tür</label><select data-k="type"><option value="">Türsüz</option>${PUBLIC_TYPES.map((t) => `<option ${t === p.type ? "selected" : ""}>${t}</option>`).join("")}</select></div>
+        <div><label>Adres</label><input data-k="addr" value="${esc((p.details || {}).address || "")}"></div>
+        <div><label>Konum (değiştirmek istersen)</label><input data-k="loc" value="${p.coordinateLat}, ${p.coordinateLon}"></div>
+      </div>
+      <div class="btns"><button class="b ok" data-a="sv">Kaydet</button><button class="b bad" data-a="del">Sil</button></div>
+    </div>`);
+  const f = d.querySelector("[data-f]");
+  d.querySelector('[data-a="ed"]').onclick = () => (f.style.display = f.style.display === "none" ? "block" : "none");
+  d.querySelector('[data-a="sv"]').onclick = (e) => guard(e.target, async () => {
+    const name = f.querySelector('[data-k="name"]').value.trim();
+    if (name.length < 2) throw new Error("Ad gerekli");
+    const type = f.querySelector('[data-k="type"]').value;
+    const data = { name: name.slice(0, 80), type, tags: type ? [type] : [], "details.address": f.querySelector('[data-k="addr"]').value.trim().slice(0, 200) };
+    const [la, lo] = f.querySelector('[data-k="loc"]').value.split(",").map((x) => parseFloat(x));
+    if (isFinite(la) && isFinite(lo) && (Math.abs(la - p.coordinateLat) > 1e-6 || Math.abs(lo - p.coordinateLon) > 1e-6)) {
+      data.coordinateLat = la; data.coordinateLon = lo;
+      const a = await areaOf(la, lo); if (a) Object.assign(data, a);
+    }
+    await updateDoc(doc(db, "businesses", p.id), data);
+    Object.assign(p, { name: data.name, type, tags: data.tags, details: { ...(p.details || {}), address: data["details.address"] } }, data.coordinateLat ? { coordinateLat: la, coordinateLon: lo } : {});
+    toast("Kaydedildi"); render();
+  });
+  d.querySelector('[data-a="del"]').onclick = (e) => {
+    if (managed) return toast("Bu yerin sahibi/ekibi var; silmeden önce sahiplikten çıkarılmalı.", 4000);
+    if (!confirm("“" + p.name + "” silinsin mi? Etkinlikleri de silinir.")) return;
+    guard(e.target, async () => {
+      for (const sub of ["posters", "photos"]) {
+        const s = await getDocs(collection(db, "businesses", p.id, sub)).catch(() => null);
+        if (s) await Promise.all(s.docs.map((x) => deleteDoc(x.ref).catch(() => {})));
+      }
+      await deleteDoc(doc(db, "businesses", p.id));
+      S.publicPlaces = S.publicPlaces.filter((x) => x.id !== p.id); toast("Silindi"); render();
+    });
+  };
+}
+async function addPlace() {
+  const name = $("#nName").value.trim(), type = $("#nType").value;
+  const [lat, lon] = $("#nLoc").value.split(",").map((x) => parseFloat(x));
+  if (name.length < 2) throw new Error("Ad gerekli");
+  if (!isFinite(lat) || !isFinite(lon)) throw new Error("Konumu “enlem, boylam” biçiminde yaz");
+  const near = S.publicPlaces.find((p) => Math.hypot((p.coordinateLat - lat) * 111000, (p.coordinateLon - lon) * 111000 * Math.cos(lat * Math.PI / 180)) < 250);
+  if (near && !confirm("250 m yakınında “" + near.name + "” zaten var. Yine de eklensin mi?")) return;
+  let address = $("#nAddr").value.trim();
+  if (!address) {
+    try { const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=tr&lat=${lat}&lon=${lon}`); address = ((await r.json()).display_name || "").split(",").slice(0, 4).join(",").trim(); } catch {}
+  }
+  const id = uuid();
+  const d = newBusiness({ id, uniqueMapId: `pub_${lat.toFixed(5)}_${lon.toFixed(5)}`, name: name.slice(0, 80), type, lat, lon, address: address.slice(0, 200), tags: type ? [type] : [] });
+  d.isPublic = true;
+  const a = await areaOf(lat, lon); if (a) Object.assign(d, a);
+  await setDoc(doc(db, "businesses", id), d);
+  S.publicPlaces.push(d); S.publicPlaces.sort((x, y) => String(x.name).localeCompare(String(y.name), "tr"));
+  toast("Eklendi: " + name); render();
+}
+
+// ---------- ARAÇLAR ----------
+function viewTools(el) {
+  el.insertAdjacentHTML("beforeend", `<h2>Araçlar</h2>
+    <div class="card"><div class="title">Sunucu temizliği + canlılık hesabı</div>
+      <p class="muted">Normalde her saat ve her gece kendiliğinden çalışır. Hemen çalıştırmak için bas.</p>
+      <div class="btns"><button class="b acc" id="cl">Şimdi çalıştır</button></div><pre id="clr" style="display:none"></pre></div>`);
+  $("#cl").onclick = (e) => guard(e.target, async () => {
+    const t = await auth.currentUser.getIdToken();
+    const r = await fetch(PUSH, { method: "POST", headers: { Authorization: "Bearer " + t, "Content-Type": "application/json" }, body: JSON.stringify({ type: "cleanup" }) });
+    const out = $("#clr"); out.style.display = "block"; out.textContent = JSON.stringify(await r.json(), null, 2);
+  });
+}
+</script>
+</body>
+</html>
