@@ -1310,8 +1310,8 @@ const SECTORS = { "": "Diğer / genel",
   retail: "Perakende ve e-ticaret", fitness: "Spor salonu ve sağlık", education: "Eğitim", fuel: "Enerji ve akaryakıt",
   public: "Belediye / kamu", ngo: "Sivil toplum / vakıf",
   alcohol: "Alkollü içki (kısıtlı)", tobacco: "Tütün (kısıtlı)", betting: "Bahis (kısıtlı)" };
-const BKIND_TR = { eventSponsor: "Resmî sponsor (etkinlik)", eventSupport: "Etkinlik desteği", venuePartner: "Marka partneri (mekân)", artistPartner: "Marka partneri (sanatçı)", seriesSponsor: "Resmî sponsor (seri)", seriesSupport: "Seri desteği" };
-const KIND_TYPE = { eventSponsor: "event", eventSupport: "event", venuePartner: "venue", artistPartner: "artist", seriesSponsor: "series", seriesSupport: "series" };
+const BKIND_TR = { eventSponsor: "Resmî sponsor (etkinlik)", eventSupport: "Etkinlik desteği", venuePartner: "Resmî partner (mekân)", artistPartner: "Sponsor (sanatçı)", artistAmbassador: "Marka elçisi (sanatçı)", seriesSponsor: "Resmî sponsor (seri)", seriesSupport: "Seri desteği" };
+const KIND_TYPE = { eventSponsor: "event", eventSupport: "event", venuePartner: "venue", artistPartner: "artist", artistAmbassador: "artist", seriesSponsor: "series", seriesSupport: "series" };
 const LINK_ST = { pending: ["Onay bekliyor", "warn"], active: ["Aktif", "ok"], rejected: ["Reddedildi", "bad"], ended: ["Bitirildi", ""], expired: ["Süresi doldu", ""], hidden: ["Admin gizledi", "bad"] };
 const seal = (b, size = 64) => `<span class="seal" style="width:${size}px;height:${size}px"><span class="seal-disc" style="background:${b.logoBg === "dark" ? "#161616" : "#fff"}">${b.logo ? `<img src="data:image/png;base64,${esc(b.logo)}" alt="">` : "logo yok"}</span></span>`;
 async function loadBrands(force) {
