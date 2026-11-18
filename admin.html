@@ -1492,6 +1492,18 @@ async function openRules() {
   });
 }
 
+// Damga uygulamada görünüyor mu, görünmüyorsa neden
+function sealWhy(l) {
+  const b = (S.brands || []).find((x) => x.id === l.brandId) || {};
+  const why = [];
+  if (l.status !== "active") why.push(l.status === "pending" ? "karşı tarafın onayı bekleniyor" : "aktif değil");
+  if (!b.verified) why.push("marka doğrulanmamış");
+  if (b.status === "suspended") why.push("marka askıda");
+  if (!b.logo) why.push("logo yok");
+  if (!isFuture(l.endAt)) why.push("bitiş tarihi geçmiş");
+  if (!["event", "series"].includes(l.targetType) && isFuture(l.startAt)) why.push("başlangıç: " + fmtDay(l.startAt));
+  return why.length ? `<span class="chip warn">Görünmüyor</span> ${esc(why.join(", "))}` : `<span class="chip ok">Görünüyor</span>`;
+}
 function linkCard(l, after) {
   const st = LINK_ST[l.status] || [l.status, ""];
   const expired = l.status === "active" && !isFuture(l.endAt);
@@ -1502,6 +1514,7 @@ function linkCard(l, after) {
       <b>Partner onayı</b><span>${l.targetApproval ? uname(l.targetApproval.by) + " · " + fmt(l.targetApproval.at) : "—"}</span>
       ${l.endedAt ? `<b>Bitiş</b><span>${l.endedBy ? uname(l.endedBy) : "Sistem"} · ${fmt(l.endedAt)} ${esc(l.endReason || "")}</span>` : ""}
       ${l.note ? `<b>Not</b><span>${esc(l.note)}</span>` : ""}<b>Ülke</b><span>${esc(l.countryCode || "—")}</span>
+      <b>Damga</b><span>${sealWhy(l)}</span>
       <b>Kayıt</b><span data-log class="muted">…</span></div>
     <div class="btns">${l.status === "active" || l.status === "pending" ? `<button class="b" data-a="end">Bitir</button><button class="b bad" data-a="hide">Gizle (kural ihlali)</button>` : ""}</div></div>`);
   fillUsers(d);
