@@ -75,6 +75,10 @@ h3{font-size:12px;margin:18px 0 8px;color:var(--muted);text-transform:uppercase;
   box-shadow:0 0 0 3px #fff inset,0 0 0 5px rgba(122,92,255,.35) inset,0 4px 10px rgba(0,0,0,.18);transform:rotate(-8deg);margin-right:12px}
 .seal-disc{width:80%;height:80%;border-radius:50%;display:flex;align-items:center;justify-content:center;transform:rotate(8deg);font-size:10px;color:#999;overflow:hidden;outline:2px dashed rgba(255,255,255,.9);outline-offset:2px}
 .seal-disc img{width:76%;height:76%;object-fit:contain}
+.seal.wide{border-radius:6px;transform:rotate(-3deg);background:linear-gradient(120deg,#7a5cff,#bf4dfc,#ff5ea3);
+  -webkit-mask:radial-gradient(circle 3px at 3px 3px,#0000 98%,#000) -3px -3px/8px 8px;mask:radial-gradient(circle 3px at 3px 3px,#0000 98%,#000) -3px -3px/8px 8px}
+.seal.wide .seal-disc{width:84%;height:76%;border-radius:4px;transform:none}
+.seal.wide .seal-disc img{width:86%;height:78%}
 .chip.p{background:var(--accSoft);border-color:#ddd0fb;color:var(--acc)}
 .chip.ok{background:var(--okSoft);border-color:#c6ecd3;color:var(--ok)}
 .chip.bad{background:var(--badSoft);border-color:#f8c9c9;color:var(--bad)}
@@ -1314,7 +1318,10 @@ const SECTORS = { "": "Diğer / genel",
 const BKIND_TR = { eventSponsor: "Resmî sponsor (etkinlik)", eventSupport: "Etkinlik desteği", venuePartner: "Resmî partner (mekân)", artistPartner: "Sponsor (sanatçı)", artistAmbassador: "Marka elçisi (sanatçı)", seriesSponsor: "Resmî sponsor (seri)", seriesSupport: "Seri desteği" };
 const KIND_TYPE = { eventSponsor: "event", eventSupport: "event", venuePartner: "venue", artistPartner: "artist", artistAmbassador: "artist", seriesSponsor: "series", seriesSupport: "series" };
 const LINK_ST = { pending: ["Onay bekliyor", "warn"], active: ["Aktif", "ok"], rejected: ["Reddedildi", "bad"], ended: ["Bitirildi", ""], expired: ["Süresi doldu", ""], hidden: ["Admin gizledi", "bad"] };
-const seal = (b, size = 64) => `<span class="seal" style="width:${size}px;height:${size}px"><span class="seal-disc" style="background:${b.logoBg === "dark" ? "#161616" : "#fff"}">${b.logo ? `<img src="data:image/png;base64,${esc(b.logo)}" alt="">` : "logo yok"}</span></span>`;
+const BROLE_TR = { owner: "Sahibi / kurucusu", marketing: "Pazarlama / marka müdürü", partnerships: "Sponsorluk ve işbirlikleri", agency: "Markanın ajansı", employee: "Çalışan", other: "Diğer" };
+const seal = (b, size = 64) => b.logoShape === "wide"
+  ? `<span class="seal wide" style="width:${Math.round(size * 0.9 * 1.8)}px;height:${Math.round(size * 0.9)}px"><span class="seal-disc" style="background:${b.logoBg === "dark" ? "#161616" : "#fff"}">${b.logo ? `<img src="data:image/png;base64,${esc(b.logo)}" alt="">` : "logo yok"}</span></span>`
+  : `<span class="seal" style="width:${size}px;height:${size}px"><span class="seal-disc" style="background:${b.logoBg === "dark" ? "#161616" : "#fff"}">${b.logo ? `<img src="data:image/png;base64,${esc(b.logo)}" alt="">` : "logo yok"}</span></span>`;
 async function loadBrands(force) {
   if (!S.brands || force) S.brands = docs(await getDocs(collection(db, "brands"))).sort((a, b) => String(a.name).localeCompare(String(b.name), "tr"));
   return S.brands;
@@ -1435,8 +1442,9 @@ function viewBrands(m) {
     if (apps.length) {
       ab.innerHTML = `<h3>Marka başvuruları (${apps.length})</h3>`;
       for (const p of apps) {
-        const d = card(ab, `<div class="title">${esc(p.name)} <span class="chip warn">Başvuru</span></div>
-          <div class="muted">${p.own ? "<b>Kendi markası</b> · " : ""}@${esc(p.username || "")} · ${esc(p.sector || "")} · <a href="${esc(/^https?:/.test(p.website || "") ? p.website : "https://" + (p.website || ""))}" target="_blank" rel="noopener">${esc(p.website || "")}</a> · IG: ${esc(p.instagram || "")}</div>
+        const d = card(ab, `<div class="row" style="align-items:center">${p.logo ? seal(p, 56) : ""}<div class="grow"><div class="title">${esc(p.name)} <span class="chip warn">Başvuru</span> ${p.role ? `<span class="chip">${esc(BROLE_TR[p.role] || p.role)}</span>` : ""}</div>
+          ${p.tagline ? `<div>${esc(p.tagline)}</div>` : ""}${p.contact ? `<div class="muted">İletişim: ${esc(p.contact)}</div>` : ""}</div></div>
+          <div class="muted">${p.own ? "<b>Kendi markası</b> · " : ""}@${esc(p.username || "")} · ${esc(SECTORS[p.sector || ""] || p.sector || "")} · <a href="${esc(/^https?:/.test(p.website || "") ? p.website : "https://" + (p.website || ""))}" target="_blank" rel="noopener">${esc(p.website || "")}</a> · IG: ${esc(p.instagram || "")}</div>
           ${p.note ? `<div style="margin-top:6px">${esc(p.note)}</div>` : ""}
           <div class="btns"><button class="b acc" data-a="c">Marka oluştur</button><button class="b bad" data-a="r">Reddet</button></div>`);
         $('[data-a="c"]', d).onclick = () => openBrand(null, p);
@@ -1448,6 +1456,24 @@ function viewBrands(m) {
     } else ab.innerHTML = "";
     const list = await loadBrands(true); const links = await loadLinks(true);
     $("#bc").textContent = list.length + " marka";
+    const reqs = list.filter((b) => b.changeRequest && (b.changeRequest.logo || b.changeRequest.sector !== undefined));
+    if (reqs.length) {
+      const h = el(`<div><h3>Logo / sektör değişiklikleri (${reqs.length})</h3></div>`); ab.appendChild(h);
+      for (const b of reqs) {
+        const cr = b.changeRequest;
+        const d = card(h, `<div class="row" style="align-items:center">${seal(b, 56)} → ${cr.logo ? seal({ ...b, logo: cr.logo }, 56) : ""}<div class="grow">
+          <div class="title">${esc(b.name)}</div><div class="muted">${cr.sector !== undefined ? "Sektör: " + esc(SECTORS[b.sector || ""] || b.sector) + " → <b>" + esc(SECTORS[cr.sector || ""] || cr.sector) + "</b> · " : ""}${uname(cr.by)} · ${fmt(cr.at)}</div></div></div>
+          <p class="muted">Yeni logonun bu markaya ait olduğunu ve kullanım izni olduğunu kontrol et. Kısıtlı sektörden çıkmak için yapılan değişikliklere dikkat et.</p>
+          <div class="btns"><button class="b acc" data-a="ok">Onayla</button><button class="b bad" data-a="no">Reddet</button></div>`);
+        fillUsers(d);
+        $('[data-a="ok"]', d).onclick = (e) => guard(e.target, async () => {
+          const u = { changeRequest: deleteField(), updatedAt: serverTimestamp() };
+          if (cr.logo) u.logo = cr.logo; if (cr.sector !== undefined) u.sector = cr.sector;
+          await updateDoc(doc(db, "brands", b.id), u); toast("Onaylandı"); render();
+        });
+        $('[data-a="no"]', d).onclick = (e) => guard(e.target, async () => { await updateDoc(doc(db, "brands", b.id), { changeRequest: deleteField() }); toast("Reddedildi"); render(); });
+      }
+    }
     const box = $("#bl"); box.innerHTML = "";
     if (!list.length) return empty(box, "Henüz marka yok.");
     for (const b of list) {
@@ -1464,7 +1490,9 @@ function viewBrands(m) {
 function openBrand(b, app) {
   openDrawer(b ? b.name : "Yeni marka", async (body) => {
     const x = b || { name: app ? app.name : "", sector: "", logoBg: "light", about: "", website: app ? app.website || "" : "", instagram: app ? app.instagram || "" : "",
-      verified: false, status: "active", managerIds: app ? [app.userId] : [], logo: "", tagline: "", cover: "" };
+      verified: false, status: "active", managerIds: app ? [app.userId] : [], ownerIds: app && app.role === "owner" ? [app.userId] : [],
+      logo: app ? app.logo || "" : "", logoBg: app ? app.logoBg || "light" : "light", logoShape: app ? app.logoShape || "round" : "round",
+      sector: app ? app.sector || "" : "", about: app ? app.about || "" : "", tagline: app ? app.tagline || "" : "", cover: app ? app.cover || "" : "" };
     const mgrNames = [], ownNames = [];
     const ownersOf = (x.ownerIds || []).filter((u) => (x.managerIds || []).includes(u));
     for (const u of x.managerIds || []) { const s = await getDoc(doc(db, "users", u)).catch(() => null); if (s && s.exists()) { mgrNames.push("@" + s.data().username); if (ownersOf.includes(u)) ownNames.push("@" + s.data().username); } }
@@ -1476,6 +1504,7 @@ function openBrand(b, app) {
     body.innerHTML = `
       <div class="card"><div class="row" style="align-items:center" id="pv">${seal(x, 96)}</div>
         <label>Logo — SVG, PDF, PNG, JPG, WEBP, GIF, AVIF, HEIC… (oran korunur; etrafındaki boşluk otomatik kırpılır)</label><input type="file" id="lf" accept="image/*,.svg,.pdf,.heic,.heif,.avif,.webp,.ico,.bmp,application/pdf">
+        <label>Damga şekli</label><select id="lsh"><option value="round" ${x.logoShape !== "wide" ? "selected" : ""}>Yuvarlak (kare / yuvarlak logo)</option><option value="wide" ${x.logoShape === "wide" ? "selected" : ""}>Dikdörtgen pul (geniş / yazılı logo)</option></select>
         <label>Logo zemini</label><select id="lb"><option value="light" ${x.logoBg !== "dark" ? "selected" : ""}>Açık (beyaz)</option><option value="dark" ${x.logoBg === "dark" ? "selected" : ""}>Koyu</option></select>
         <label>Ad</label><input id="bn" value="${esc(x.name)}">
         <label>Sektör</label><select id="bs">${Object.entries(SECTORS).map(([k, v]) => `<option value="${k}" ${k === (x.sector || "") ? "selected" : ""}>${v}</option>`).join("")}</select>
@@ -1499,8 +1528,9 @@ function openBrand(b, app) {
       ${b ? `<h3>Bağlantılar</h3><div id="blk"></div>` : ""}`;
     let logo = x.logo || "", cover = x.cover || "";
     $("#cf", body).onchange = (e) => guard(null, async () => { const f = e.target.files[0]; if (!f) return; cover = await readCover(f); $("#cpv", body).innerHTML = `<img src="data:image/jpeg;base64,${cover}" style="width:100%;max-height:160px;object-fit:cover;border-radius:12px;margin-top:6px">`; });
-    $("#lf", body).onchange = (e) => guard(null, async () => { const f = e.target.files[0]; if (!f) return; logo = await readLogo(f); $("#pv", body).innerHTML = seal({ ...x, logo, logoBg: $("#lb", body).value }, 96); });
-    $("#lb", body).onchange = () => { $("#pv", body).innerHTML = seal({ ...x, logo, logoBg: $("#lb", body).value }, 96); };
+    $("#lf", body).onchange = (e) => guard(null, async () => { const f = e.target.files[0]; if (!f) return; logo = await readLogo(f); $("#pv", body).innerHTML = seal({ ...x, logo, logoBg: $("#lb", body).value, logoShape: $("#lsh", body).value }, 96); });
+    const pv = () => { $("#pv", body).innerHTML = seal({ ...x, logo, logoBg: $("#lb", body).value, logoShape: $("#lsh", body).value }, 96); };
+    $("#lb", body).onchange = pv; $("#lsh", body).onchange = pv;
     $("#bsave", body).onclick = (e) => guard(e.target, async () => {
       const name = $("#bn", body).value.trim(); if (!name) throw new Error("Ad gerekli");
       const managerIds = await uidsOfUsernames($("#bm", body).value);
@@ -1513,7 +1543,7 @@ function openBrand(b, app) {
         if (!art) throw new Error("Bu kullanıcının sanatçı profili yok");
         founderCreatorIds.push(art.id);
       }
-      const data = { name, sector: $("#bs", body).value, logoBg: $("#lb", body).value, logo, about: $("#ba", body).value.trim().slice(0, 600), tagline: $("#bt", body).value.trim().slice(0, 80), cover,
+      const data = { name, sector: $("#bs", body).value, logoBg: $("#lb", body).value, logoShape: $("#lsh", body).value, logo, about: $("#ba", body).value.trim().slice(0, 600), tagline: $("#bt", body).value.trim().slice(0, 80), cover,
         website: $("#bw", body).value.trim(), instagram: $("#bi", body).value.trim(), managerIds, ownerIds, founderCreatorIds,
         verified: $("#bv", body).checked, status: $("#bsu", body).checked ? "suspended" : ($("#bcl", body).checked ? "closed" : "active"),
         logoConsent: { note: $("#bc2", body).value.trim().slice(0, 300), by: auth.currentUser.uid, at: serverTimestamp() }, updatedAt: serverTimestamp() };
