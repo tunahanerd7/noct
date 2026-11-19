@@ -1436,7 +1436,7 @@ function viewBrands(m) {
       ab.innerHTML = `<h3>Marka başvuruları (${apps.length})</h3>`;
       for (const p of apps) {
         const d = card(ab, `<div class="title">${esc(p.name)} <span class="chip warn">Başvuru</span></div>
-          <div class="muted">@${esc(p.username || "")} · ${esc(p.sector || "")} · <a href="${esc(/^https?:/.test(p.website || "") ? p.website : "https://" + (p.website || ""))}" target="_blank" rel="noopener">${esc(p.website || "")}</a> · IG: ${esc(p.instagram || "")}</div>
+          <div class="muted">${p.own ? "<b>Kendi markası</b> · " : ""}@${esc(p.username || "")} · ${esc(p.sector || "")} · <a href="${esc(/^https?:/.test(p.website || "") ? p.website : "https://" + (p.website || ""))}" target="_blank" rel="noopener">${esc(p.website || "")}</a> · IG: ${esc(p.instagram || "")}</div>
           ${p.note ? `<div style="margin-top:6px">${esc(p.note)}</div>` : ""}
           <div class="btns"><button class="b acc" data-a="c">Marka oluştur</button><button class="b bad" data-a="r">Reddet</button></div>`);
         $('[data-a="c"]', d).onclick = () => openBrand(null, p);
@@ -1467,6 +1467,11 @@ function openBrand(b, app) {
       verified: false, status: "active", managerIds: app ? [app.userId] : [], logo: "", tagline: "", cover: "" };
     const mgrNames = [];
     for (const u of x.managerIds || []) { const s = await getDoc(doc(db, "users", u)).catch(() => null); if (s && s.exists()) mgrNames.push("@" + s.data().username); }
+    // Kurucu sanatçılar (kendi markası): sanatçı profili kimlikleri
+    const founderIds = [...(x.founderCreatorIds || [])];
+    if (!b && app && app.own && app.creatorId && !founderIds.includes(app.creatorId)) founderIds.push(app.creatorId);
+    const founderNames = [];
+    for (const cid of founderIds) { const s = await getDoc(doc(db, "creators", cid)).catch(() => null); if (s && s.exists()) { const o = await getDoc(doc(db, "users", s.data().ownerId)).catch(() => null); founderNames.push("@" + ((o && o.exists() && o.data().username) || s.data().name)); } }
     body.innerHTML = `
       <div class="card"><div class="row" style="align-items:center" id="pv">${seal(x, 96)}</div>
         <label>Logo — SVG, PDF, PNG, JPG, WEBP, GIF, AVIF, HEIC… (oran korunur; etrafındaki boşluk otomatik kırpılır)</label><input type="file" id="lf" accept="image/*,.svg,.pdf,.heic,.heif,.avif,.webp,.ico,.bmp,application/pdf">
@@ -1480,6 +1485,8 @@ function openBrand(b, app) {
         <label>Web sitesi</label><input id="bw" value="${esc(x.website || "")}">
         <label>Instagram</label><input id="bi" value="${esc(x.instagram || "")}">
         <label>Yöneticiler (Noct kullanıcı adları, virgülle)</label><input id="bm" value="${esc(mgrNames.join(", "))}" placeholder="@kullanici1, @kullanici2">
+        <label>Kurucu sanatçı — sanatçının kendi markasıysa (kullanıcı adı, virgülle). Sanatçı profilinde “Markaları” olarak görünür; bu sanatçıya sponsor olarak bağlanamaz.</label><input id="bf" value="${esc(founderNames.join(", "))}" placeholder="@sanatci">
+        ${app && app.own ? `<div class="muted">Başvuran “bu benim kendi markam” dedi.</div>` : ""}
         <label>Logo kullanım izni / yetki belgesi notu (kim, ne zaman, hangi belge)</label><input id="bc2" value="${esc((x.logoConsent && x.logoConsent.note) || "")}">
         <label><input type="checkbox" id="bv" ${x.verified ? "checked" : ""} style="width:auto"> Doğrulanmış (belgeler ve logo izni kontrol edildi)</label>
         <label><input type="checkbox" id="bsu" ${x.status === "suspended" ? "checked" : ""} style="width:auto"> Askıya al (tüm damgalar gizlenir)</label>
@@ -1493,8 +1500,15 @@ function openBrand(b, app) {
     $("#bsave", body).onclick = (e) => guard(e.target, async () => {
       const name = $("#bn", body).value.trim(); if (!name) throw new Error("Ad gerekli");
       const managerIds = await uidsOfUsernames($("#bm", body).value);
+      const founderCreatorIds = [];
+      for (const u of await uidsOfUsernames($("#bf", body).value)) {
+        const cs = await getDocs(query(collection(db, "creators"), where("ownerId", "==", u), limit(5)));
+        const art = docs(cs).find((c) => c.kind !== "manager" && c.kind !== "organizer") || docs(cs)[0];
+        if (!art) throw new Error("Bu kullanıcının sanatçı profili yok");
+        founderCreatorIds.push(art.id);
+      }
       const data = { name, sector: $("#bs", body).value, logoBg: $("#lb", body).value, logo, about: $("#ba", body).value.trim().slice(0, 600), tagline: $("#bt", body).value.trim().slice(0, 80), cover,
-        website: $("#bw", body).value.trim(), instagram: $("#bi", body).value.trim(), managerIds,
+        website: $("#bw", body).value.trim(), instagram: $("#bi", body).value.trim(), managerIds, founderCreatorIds,
         verified: $("#bv", body).checked, status: $("#bsu", body).checked ? "suspended" : "active",
         logoConsent: { note: $("#bc2", body).value.trim().slice(0, 300), by: auth.currentUser.uid, at: serverTimestamp() }, updatedAt: serverTimestamp() };
       if (data.verified && !data.logo) throw new Error("Doğrulamadan önce logo yükle");
