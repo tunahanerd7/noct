@@ -290,7 +290,7 @@ const PAGES = [
   { g: "Veriler", k: "events", ic: "🎟", t: "Etkinlikler", v: viewEvents },
   { g: "Veriler", k: "moments", ic: "📸", t: "Paylaşımlar", v: viewMoments },
   { g: "Veriler", k: "places", ic: "🏟", t: "Kamuya açık alanlar", v: viewPlaces },
-  { g: "Markalar ve seriler", k: "brands", ic: "✺", t: "Markalar", v: viewBrands },
+  { g: "Markalar ve seriler", k: "brands", ic: "✺", t: "Markalar", n: () => (S.brandApps || []).length, v: viewBrands },
   { g: "Markalar ve seriler", k: "links", ic: "⛓", t: "Marka bağlantıları", n: () => (S.links || []).filter((l) => l.status === "pending").length, v: viewLinks },
   { g: "Markalar ve seriler", k: "series", ic: "〰", t: "Seriler", v: viewSeries },
   { g: "Sistem", k: "banned", ic: "⛔", t: "Askıdakiler", v: viewBanned },
@@ -371,6 +371,7 @@ async function loadCore() {
     getDocs(collection(db, "businesses"))
   ]);
   try { S.changes = docs(await getDocs(query(collection(db, "venueChanges"), where("status", "==", "pending")))); } catch { S.changes = []; }
+  try { await loadBrandApps(); } catch { S.brandApps = []; }
   try { S.threads = docs(await getDocs(query(collection(db, "support"), orderBy("lastAt", "desc"), limit(150)))); } catch { S.threads = []; }
   const byOld = (a, b) => (toDate(a.createdAt) || 0) - (toDate(b.createdAt) || 0);
   S.venueClaims = docs(vc).sort(byOld);
@@ -1406,12 +1407,45 @@ async function readLogo(file) {
   throw new Error("Logo çok karmaşık; daha sade bir dosya dene.");
 }
 
+async function loadBrandApps() {
+  S.brandApps = docs(await getDocs(query(collection(db, "brandApplications"), where("status", "==", "pending"), limit(200))).catch(() => ({ docs: [] })));
+  return S.brandApps;
+}
+// Kapak görseli: JPEG, en fazla ~280 KB
+async function readCover(file) {
+  const c = await fileToCanvas(file);
+  for (const [side, q] of [[1400, 0.82], [1200, 0.78], [1000, 0.72], [800, 0.7]]) {
+    const k = Math.min(1, side / Math.max(c.width, c.height));
+    const o = document.createElement("canvas"); o.width = Math.round(c.width * k); o.height = Math.round(c.height * k);
+    const ctx = o.getContext("2d"); ctx.fillStyle = "#000"; ctx.fillRect(0, 0, o.width, o.height); ctx.drawImage(c, 0, 0, o.width, o.height);
+    const b64 = o.toDataURL("image/jpeg", q).split(",")[1];
+    if (b64.length <= 380000) return b64;
+  }
+  throw new Error("Kapak çok büyük; daha küçük bir görsel dene.");
+}
 function viewBrands(m) {
-  m.innerHTML = `<div class="toolbar"><button class="b acc" id="nb">+ Yeni marka</button><button class="b" id="rules">Ülke kuralları</button><span class="muted" id="bc"></span></div><div id="bl"><div class="loading">Yükleniyor…</div></div>
+  m.innerHTML = `<div class="toolbar"><button class="b acc" id="nb">+ Yeni marka</button><button class="b" id="rules">Ülke kuralları</button><span class="muted" id="bc"></span></div>
+    <div id="bapps"></div><div id="bl"><div class="loading">Yükleniyor…</div></div>
     <p class="muted">Marka profilini yalnızca admin açar. Logo kullanım iznini ve yetki belgesini kontrol etmeden “Doğrulanmış” yapma. Doğrulama, markanın bir mekân ya da sanatçıyla ilişkisi olduğunu göstermez; her bağlantı ayrıca iki tarafça onaylanır.</p>`;
   $("#nb").onclick = () => openBrand(null);
   $("#rules").onclick = () => openRules();
   guard(null, async () => {
+    const apps = await loadBrandApps();
+    const ab = $("#bapps");
+    if (apps.length) {
+      ab.innerHTML = `<h3>Marka başvuruları (${apps.length})</h3>`;
+      for (const p of apps) {
+        const d = card(ab, `<div class="title">${esc(p.name)} <span class="chip warn">Başvuru</span></div>
+          <div class="muted">@${esc(p.username || "")} · ${esc(p.sector || "")} · <a href="${esc(/^https?:/.test(p.website || "") ? p.website : "https://" + (p.website || ""))}" target="_blank" rel="noopener">${esc(p.website || "")}</a> · IG: ${esc(p.instagram || "")}</div>
+          ${p.note ? `<div style="margin-top:6px">${esc(p.note)}</div>` : ""}
+          <div class="btns"><button class="b acc" data-a="c">Marka oluştur</button><button class="b bad" data-a="r">Reddet</button></div>`);
+        $('[data-a="c"]', d).onclick = () => openBrand(null, p);
+        $('[data-a="r"]', d).onclick = (e) => {
+          const why = prompt("Ret nedeni (başvurana gösterilir):", "Markayla bağını doğrulayamadık."); if (why === null) return;
+          guard(e.target, async () => { await updateDoc(doc(db, "brandApplications", p.id), { status: "rejected", rejectReason: why.slice(0, 300), decidedAt: serverTimestamp(), decidedBy: auth.currentUser.uid }); toast("Reddedildi"); render(); });
+        };
+      }
+    } else ab.innerHTML = "";
     const list = await loadBrands(true); const links = await loadLinks(true);
     $("#bc").textContent = list.length + " marka";
     const box = $("#bl"); box.innerHTML = "";
@@ -1427,9 +1461,10 @@ function viewBrands(m) {
     }
   });
 }
-function openBrand(b) {
+function openBrand(b, app) {
   openDrawer(b ? b.name : "Yeni marka", async (body) => {
-    const x = b || { name: "", sector: "", logoBg: "light", about: "", website: "", instagram: "", verified: false, status: "active", managerIds: [], logo: "" };
+    const x = b || { name: app ? app.name : "", sector: "", logoBg: "light", about: "", website: app ? app.website || "" : "", instagram: app ? app.instagram || "" : "",
+      verified: false, status: "active", managerIds: app ? [app.userId] : [], logo: "", tagline: "", cover: "" };
     const mgrNames = [];
     for (const u of x.managerIds || []) { const s = await getDoc(doc(db, "users", u)).catch(() => null); if (s && s.exists()) mgrNames.push("@" + s.data().username); }
     body.innerHTML = `
@@ -1438,6 +1473,9 @@ function openBrand(b) {
         <label>Logo zemini</label><select id="lb"><option value="light" ${x.logoBg !== "dark" ? "selected" : ""}>Açık (beyaz)</option><option value="dark" ${x.logoBg === "dark" ? "selected" : ""}>Koyu</option></select>
         <label>Ad</label><input id="bn" value="${esc(x.name)}">
         <label>Sektör</label><select id="bs">${Object.entries(SECTORS).map(([k, v]) => `<option value="${k}" ${k === (x.sector || "") ? "selected" : ""}>${v}</option>`).join("")}</select>
+        <label>Slogan (adın altındaki kısa satır, en fazla 80 karakter)</label><input id="bt" maxlength="80" value="${esc(x.tagline || "")}">
+        <label>Kapak görseli (marka sayfasının üstü)</label><input type="file" id="cf" accept="image/*,.heic,.heif,.webp,.avif">
+        <div id="cpv">${x.cover ? `<img src="data:image/jpeg;base64,${x.cover}" style="width:100%;max-height:160px;object-fit:cover;border-radius:12px;margin-top:6px">` : ""}</div>
         <label>Açıklama</label><textarea id="ba" rows="3">${esc(x.about || "")}</textarea>
         <label>Web sitesi</label><input id="bw" value="${esc(x.website || "")}">
         <label>Instagram</label><input id="bi" value="${esc(x.instagram || "")}">
@@ -1448,20 +1486,24 @@ function openBrand(b) {
         <div class="btns"><button class="b acc" id="bsave">Kaydet</button>${b ? `<button class="b bad" id="bdel">Markayı sil</button>` : ""}</div>
       </div>
       ${b ? `<h3>Bağlantılar</h3><div id="blk"></div>` : ""}`;
-    let logo = x.logo || "";
+    let logo = x.logo || "", cover = x.cover || "";
+    $("#cf", body).onchange = (e) => guard(null, async () => { const f = e.target.files[0]; if (!f) return; cover = await readCover(f); $("#cpv", body).innerHTML = `<img src="data:image/jpeg;base64,${cover}" style="width:100%;max-height:160px;object-fit:cover;border-radius:12px;margin-top:6px">`; });
     $("#lf", body).onchange = (e) => guard(null, async () => { const f = e.target.files[0]; if (!f) return; logo = await readLogo(f); $("#pv", body).innerHTML = seal({ ...x, logo, logoBg: $("#lb", body).value }, 96); });
     $("#lb", body).onchange = () => { $("#pv", body).innerHTML = seal({ ...x, logo, logoBg: $("#lb", body).value }, 96); };
     $("#bsave", body).onclick = (e) => guard(e.target, async () => {
       const name = $("#bn", body).value.trim(); if (!name) throw new Error("Ad gerekli");
       const managerIds = await uidsOfUsernames($("#bm", body).value);
-      const data = { name, sector: $("#bs", body).value, logoBg: $("#lb", body).value, logo, about: $("#ba", body).value.trim().slice(0, 400),
+      const data = { name, sector: $("#bs", body).value, logoBg: $("#lb", body).value, logo, about: $("#ba", body).value.trim().slice(0, 600), tagline: $("#bt", body).value.trim().slice(0, 80), cover,
         website: $("#bw", body).value.trim(), instagram: $("#bi", body).value.trim(), managerIds,
         verified: $("#bv", body).checked, status: $("#bsu", body).checked ? "suspended" : "active",
         logoConsent: { note: $("#bc2", body).value.trim().slice(0, 300), by: auth.currentUser.uid, at: serverTimestamp() }, updatedAt: serverTimestamp() };
       if (data.verified && !data.logo) throw new Error("Doğrulamadan önce logo yükle");
       if (data.verified && !(x.verified)) { data.verifiedAt = serverTimestamp(); data.verifiedBy = auth.currentUser.uid; }
       if (b) await updateDoc(doc(db, "brands", b.id), data);
-      else { data.createdAt = serverTimestamp(); await setDoc(doc(collection(db, "brands")), data); }
+      else {
+        data.createdAt = serverTimestamp(); const ref = doc(collection(db, "brands")); await setDoc(ref, data);
+        if (app) await updateDoc(doc(db, "brandApplications", app.id), { status: "approved", brandId: ref.id, decidedAt: serverTimestamp(), decidedBy: auth.currentUser.uid });
+      }
       toast("Kaydedildi"); closeDrawer(); await loadBrands(true); render();
     });
     if (b) {
