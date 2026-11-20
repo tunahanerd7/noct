@@ -542,6 +542,7 @@ function viewClaims(m) {
           <b>Tür</b><span>${esc(c.venueType || "—")}</span>
           <b>Adres</b><span>${esc(c.venueAddress || "—")} ${mapLink(c.lat, c.lon)}</span>
           ${c.note ? `<b>Not</b><span>${esc(c.note)}</span>` : ""}
+          ${c.reservationMode ? `<b>Rezervasyon</b><span>${({ off: "Almıyor", optional: "İsteğe bağlı", required: "Zorunlu (sadece rezervasyonla)" })[c.reservationMode] || "—"}</span>` : ""}
           <b>Belgeler</b><span data-docs><span class="muted">yükleniyor…</span></span>
         </div></div></div>
       <div class="btns"><button class="b ok" data-a="ok">Onayla…</button><button class="b" data-a="docs">Ek belge iste…</button><button class="b bad" data-a="no">Reddet…</button><button class="b" data-a="msg">Mesaj yaz…</button></div>`);
@@ -595,6 +596,15 @@ async function approveClaim(c) {
       data.ownerId = c.userId; data["team." + c.userId] = deleteField(); data.teamIds = arrayRemove(c.userId);
     } else { data["team." + c.userId] = role; data.teamIds = arrayUnion(c.userId); }
     await updateDoc(ref, data);
+  }
+  // Başvuruda sorulan rezervasyon modu: yeni açılan ya da sahibi olmayan mekâna işlenir
+  if (["optional", "required"].includes(c.reservationMode) && ["owner", "manager"].includes(role)) {
+    const bref = doc(db, "businesses", venueId);
+    const bs = await getDoc(bref);
+    const b = bs.exists() ? bs.data() : {};
+    if (!b.ownerId || b.ownerId === c.userId) {
+      await updateDoc(bref, { "details.acceptsReservations": true, "details.reservationRequired": c.reservationMode === "required" }).catch(() => {});
+    }
   }
   await updateDoc(doc(db, "venueClaims", c.id), { status: "approved", venueId, reviewedAt: serverTimestamp() });
   S.venueClaims = S.venueClaims.filter((x) => x.id !== c.id); render();
