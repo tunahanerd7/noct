@@ -732,7 +732,7 @@ async function approveGig(g) {
   const events = Array.isArray(snap.data().events) ? snap.data().events.slice() : [];
   const fill = (ev) => {
     ev.title = g.title; ev.desc = g.desc || ""; ev.startTime = g.startTime; ev.endTime = g.endTime;
-    for (const k of ["genres", "entryType", "priceText", "category", "artistIds"]) { if (g[k] != null) ev[k] = g[k]; else delete ev[k]; }
+    for (const k of ["genres", "entryType", "priceText", "category", "artistIds", "creatorPos"]) { if (g[k] != null) ev[k] = g[k]; else delete ev[k]; }
     if (g.ticketURL) { ev.ticketURL = g.ticketURL; ev.ticketMode = "external"; } else { delete ev.ticketURL; delete ev.ticketMode; }
   };
   let eventId;
